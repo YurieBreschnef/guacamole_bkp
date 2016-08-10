@@ -95,19 +95,19 @@ module init
       amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
-              state%temp%val(i,j) = state%temp%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              !state%temp%val(i,j) = state%temp%val(i,j) &
+              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
               
 
-              !amp = rand()
-              !state%temp%val(i,j) = amp
+              amp = rand()
+              state%temp%val(i,j) = amp
           end do
         end do
       end do
     end do
-    state%temp%val = state%temp%val*0.05_rp
+    state%temp%val = state%temp%val*0.10_rp
 
     !call s_trafo(state%temp,state%temp_f,0)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -125,13 +125,15 @@ module init
     !do xpos=xdim/16,xdim,xdim/16
     !  do ypos=ydim/7,ydim,ydim/7
     !  amp = rand()
-    !    do i=0,xdim-1
-    !      do j=0,ydim-1
+        do i=0,xdim-1
+          do j=0,ydim-1
     !          state%chem%val(i,j) = state%chem%val(i,j) &
     !          +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
     !                       +(30.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-    !      end do
-    !    end do
+              amp = rand()
+              state%temp%val(i,j) = amp
+          end do
+        end do
     !  end do
     !end do
     !state%temp%val = state%temp%val/1.0_rp
@@ -164,8 +166,9 @@ module init
 
     state%ikx_sqr%val = state%ikx%val**2
     state%iky_sqr%val = state%iky%val**2
-
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
+
+    call set_ik_bar(state%t)  
     if(debuglevel .GE. 1) write(*,*) '  -done with init_k.'
   end subroutine
 end module

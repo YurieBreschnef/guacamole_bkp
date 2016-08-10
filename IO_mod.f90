@@ -170,13 +170,18 @@ module IO_mod
 		filename = trim(filename)
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_div!'
+    !write div u  (k_i * u_i ==0)condition to dummy
     state%s_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+    !write brucker  (k_bar_i * u_i ==0)condition to other dummy
+    state%c_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+                              +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
     call dfftw_execute_dft(ifull2D,state%s_dummy_f%val,state%s_dummy%val)
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
 	  			write(20,*) real(i)*(Lx/real(xdim)),real(j)*(Ly/real(ydim))&
-	  			            ,real(state%s_dummy%val(i,j),real_outp_precision)
+	  			           ,real(state%s_dummy%val(i,j),real_outp_precision)&
+                     ,real(state%c_dummy_f%val(i,j),real_outp_precision)
 			end do
 		end do
     close(20)
@@ -329,7 +334,10 @@ module IO_mod
   subroutine write_sys_stat()
     !write measured system wide diagnostics to file.
     integer                             :: io_error = 0
-    type(sfield)                        :: dummy
+    type(sfield)                        :: int_dummy_f
+    type(sfield)                        :: int_dummy
+    type(sfield)                        :: int1_dummy_f
+    type(sfield)                        :: int1_dummy
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=23),parameter					:: path ='./output/data/sys_stat/'
@@ -340,15 +348,20 @@ module IO_mod
 		filename = trim(filename)
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
-      if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_sys_div!'
-      state%s_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
+      if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_sys_stat!'
+      int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                                 +state%iky%val(:,:)*state%u_f%val(:,:,2) 
-      call dfftw_execute_dft(ifull2D,state%s_dummy_f%val,state%s_dummy%val)
+      int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
+                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
+      call dfftw_execute_dft(ifull2D,int_dummy_f%val,int_dummy%val)
+      call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+
 	 	  write(20,*) state%step,                                               & !1
                   state%t,                                                  & !2
-                  maxval(real(state%s_dummy%val,real_outp_precision)),      & !3 maximum of divergence
+                  maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
                   shear,                                                    & !4 strength of shear
-                  dt                                                          !5
+                  dt,                                                       & !5
+                  maxval(real(int1_dummy%val,real_outp_precision))            !6 max brucker div 
       close(20)
     end if
   end subroutine

@@ -45,14 +45,17 @@ program guacamole
       !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
     end if 
 
-  	if(mod(state%step,(steps/1000)).EQ.0) write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
-            '| t:',state%t,'| dt:',dt,'| shearing:',shearing,'|shearstrength:',shear
-
-
-    if(state%t >tmax/6.0_rp) then
-        shearing = 1
-        shear = (state%t-tmax/6.0_rp)/(tmax/(5.0/6.0)) *0.05_rp
+  	if(mod(state%step,(steps/1000)).EQ.0) then
+    !    write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
+    !        '| t:',state%t,'| dt:',dt,'| shearing:',shearing,'|shearstrength:',shear
+        call div_tester()
     end if
+
+
+    !if(state%t >tmax/6.0_rp) then
+    !    shearing = 1
+    !    shear = (state%t-tmax/6.0_rp)/(tmax/(5.0/6.0)) *0.05_rp
+    !end if
 
     call RK4_adjust_dt()
     call RK4_step()

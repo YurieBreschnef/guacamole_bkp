@@ -71,6 +71,7 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
 	        	out_arr(i,:) = y_pen_f/real(ydim,rp)			
 	        end do	
 	        if(debuglevel.GE.3) write(*,*) 'transform done.'
+
     else if(dir==-1) then
           ! transform in backward direction
           ! y-pencils
@@ -101,7 +102,9 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
            		call dfftw_execute_dft(xf_x,x_pen_f, x_pen)						! transform
 	        	out_arr(:,j) = x_pen											! fill u with pencil
 	        end do	
-
+        ! throw away residual complex values
+        out_arr(:,:) = cmplx(real(out_arr(:,:),rp),0.0_rp,rp)
+        
         else
           write(*,*) 'WARNING: sub trafo has been called with bad input parameter dir (!=1 or -1)!'
   end if

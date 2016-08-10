@@ -38,10 +38,13 @@ module timestepping
     if(debuglevel .GE.3) write(*,*)'RK4 sub called'
     call dealiase_all()
     !_____________________k1_________________________________
+    
+    call set_ik_bar(state%t) 
   	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
   	state%t_k1%val = ft(state%u_f%val ,state%temp_f%val ,state%t)     
   	state%c_k1%val = fc(state%u_f%val ,state%chem_f%val ,state%t)     
     !_____________________k2_________________________________
+    call set_ik_bar(state%t+dt_2) 
   	state%u_k2%val = fu(state%u_f%val   +dt_2*state%u_k1%val,&  !f(u_f,temp_f,chem_f,t)
                         state%temp_f%val+dt_2*state%t_k1%val,&
                         state%chem_f%val+dt_2*state%c_k1%val,&
@@ -54,6 +57,7 @@ module timestepping
                         state%chem_f%val+dt_2*state%c_k1%val,&
                         state%t+dt_2)     
     !_____________________k3_________________________________
+    call set_ik_bar(state%t+dt_2) 
   	state%u_k3%val = fu(state%u_f%val   +dt_2*state%u_k2%val,&
                         state%temp_f%val+dt_2*state%t_k2%val,&
                         state%chem_f%val+dt_2*state%c_k2%val,&
@@ -65,17 +69,18 @@ module timestepping
                         state%chem_f%val+dt_2*state%c_k2%val,&
                         state%t+dt_2)     
     !_____________________k4_________________________________
+    call set_ik_bar(state%t+dt) 
   	state%u_k4%val = fu(state%u_f%val   +dt*state%u_k3%val,&
                         state%temp_f%val+dt*state%t_k3%val,&
                         state%chem_f%val+dt*state%c_k3%val,&
-                        state%t+dt_2)     
+                        state%t+dt)     
   	state%t_k4%val = ft(state%u_f%val   +dt*state%u_k3%val,&
                         state%temp_f%val+dt*state%t_k3%val,&
-                        state%t+dt_2)     
+                        state%t+dt)     
 
   	state%c_k4%val = fc(state%u_f%val   +dt*state%u_k3%val,&  
                         state%chem_f%val+dt*state%c_k3%val,&
-                        state%t+dt_2)     
+                        state%t+dt)     
     !____________________step______________________________'_
   	state%u_f%val     =state%u_f%val     +(dt/6.0_rp)*(      state%u_k1%val&
                                                      +2.0_rp*state%u_k2%val&
@@ -99,6 +104,7 @@ module timestepping
   	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
     if(debuglevel .GE.3) write(*,*)'RK4 sub called'
     call dealiase_all()
+    call set_ik_bar(state%t) 
   	state%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
   	state%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
   	state%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,state%t)     

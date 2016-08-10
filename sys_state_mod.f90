@@ -24,32 +24,36 @@ module sys_state
   type system_state
     ! defines the physical system state in its entirety. Many functions and subs
     ! will use this type as return type
-    type(vfield)                                              :: u
-    type(vfield)                                              :: dummy
-    type(vfield)                                              :: dummy_f
-    type(vfield)                                              :: z_dummy_f
-    type(vfield)                                              :: u_f
-    type(vfield)                                              :: u_k1,u_k2,u_k3,u_k4	
+    type(vfield)                      :: u
+    type(vfield)                      :: dummy
+    type(vfield)                      :: dummy_f
+    type(vfield)                      :: z_dummy_f
+    type(vfield)                      :: u_f
+    type(vfield)                      :: u_k1,u_k2,u_k3,u_k4	
 
-    type(sfield)                                              :: temp
-    type(sfield)                                              :: temp_f
-    type(sfield)                                              :: t_k1,t_k2,t_k3,t_k4	
-    type(sfield)                                              :: chem  
-    type(sfield)                                              :: chem_f
+    type(sfield)                      :: temp
+    type(sfield)                      :: temp_f
+    type(sfield)                      :: t_k1,t_k2,t_k3,t_k4	
+    type(sfield)                      :: chem  
+    type(sfield)                      :: chem_f
 
-    type(sfield)                                              :: s_dummy
-    type(sfield)                                              :: s_dummy_f
+    type(sfield)                      :: s_dummy
+    type(sfield)                      :: s_dummy_f
 
-    type(sfield)                                              :: c_dummy_f
-    type(sfield)                                              :: cz_dummy_f
+    type(sfield)                      :: c_dummy_f
+    type(sfield)                      :: cz_dummy_f
 
-    type(sfield)                                              :: t_dummy_f
-    type(sfield)                                              :: tz_dummy_f
-    type(sfield)                                              :: c_k1,c_k2,c_k3,c_k4
+    type(sfield)                      :: t_dummy_f
+    type(sfield)                      :: tz_dummy_f
+    type(sfield)                      :: c_k1,c_k2,c_k3,c_k4
 
-  	type(kfield)                                              :: ikx,iky! k's for deriv
-  	type(kfield)                                              :: ikx_sqr,iky_sqr! k's for deriv
-  	type(kfield)                                              :: iki_sqr
+  	type(kfield)                      :: ikx,iky! k's for deriv
+  	type(kfield)                      :: ikx_sqr,iky_sqr! k's for deriv
+  	type(kfield)                      :: iki_sqr
+
+  	type(kfield)                      :: ikx_bar,iky_bar! k's for deriv
+  	type(kfield)                      :: ikx_bar_sqr,iky_bar_sqr! k's for deriv
+  	type(kfield)                      :: iki_bar_sqr
 
   	real(kind = rp)								   	:: t	  = 0.0_rp	! time variable
   	integer									    	   	:: step = 0 			! acute step of sim
@@ -75,6 +79,7 @@ contains
     end do
     measure_Ekin = real(Ekin,real_outp_precision)/real(xdim*ydim,real_outp_precision)
   end function
+
   function measure_vmax()
     ! returns the highest absolute velocitiy within the system
     real(kind=real_outp_precision)            ::measure_vmax
@@ -144,5 +149,28 @@ contains
     end do
     measure_u_rms= sqrt(real((u_rms),real_outp_precision)/real(xdim*ydim,real_outp_precision))
   end function
+
+
+  subroutine set_ik_bar(ktime)
+    ! resets the ik_bar wave vectors for a given time
+    ! note how the x component is not really used, but still there for generality and possible
+    ! future changes
+    real(kind = rp)                              :: ktime
+    !TODO very ineffective to reset k's if shearing is off.
+    state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
+    state%iky_bar%val(:,:) = state%iky%val(:,:) 
+    state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+    state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
+    state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+    if(shearing ==1) then
+      state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
+      state%iky_bar%val(:,:) = state%iky%val(:,:) - shear*ktime*state%ikx%val(:,:)
+
+      state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+      state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
+
+      state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+    end if
+  end subroutine
 
 end module

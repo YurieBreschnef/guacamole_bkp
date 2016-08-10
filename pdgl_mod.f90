@@ -19,14 +19,39 @@ function fu(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                           ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
+
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
   fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu = fu + fu_shear(u_f,t)               !SHEAR
+
   fu(:,:,1) = dealiase_field(fu(:,:,1))
   fu(:,:,2) = dealiase_field(fu(:,:,2))
   !_______________________________________________________________
 end function 
+!----------------------------------------
+function fu_shear(u_f,t)
+  ! calculates the shear-related term of velocity evolution equation in fourier space
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+  real(kind = rp)                                  ,intent(in) :: t
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_shear
+  fu_shear(:,:,:) =cmplx(0.0_rp,0.0_rp)
+  if(shearing ==1) then
+    do i=0,xdim-1
+      do j=0,ydim-1
+          if (.NOT.(i==0.AND.j==0)) then
+             fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
+             fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
+             fu_shear(i,j,1) = fu_shear(i,j,1)-((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
+                                          /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
+             fu_shear(i,j,2) = fu_shear(i,j,2)-((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
+                                          /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
+          end if
+      end do
+    end do
+  end if
+end function
 !----------------------------------------
 function fu_diff(u_f,t)
   ! calculates the diffusion term of velocity evolution equation in fourier space
@@ -35,7 +60,9 @@ function fu_diff(u_f,t)
   real(kind = rp)                                           ,intent(in) :: t
   integer                                                               :: dir
   do dir = 1,2
-     fu_diff(:,:,dir) = D_visc*( state%iki_sqr%val(:,:))*u_f(:,:,dir)
+     !           old k-vectors
+     !fu_diff(:,:,dir) = D_visc*( state%iki_sqr%val(:,:))*u_f(:,:,dir)
+     fu_diff(:,:,dir) = D_visc*( state%iki_bar_sqr%val(:,:))*u_f(:,:,dir)
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
   end do
 end function
@@ -51,17 +78,32 @@ function fu_buo(u_f,temp_f,chem_f,t)
   do i=0,xdim-1
     do j=0,ydim-1
         if (.NOT.(i==0.AND.j==0)) then
+
+!           old k-vectors
+!          fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
+!              (-state%ikx%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
+!          fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
+!              (-state%iky%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
+!          fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
+!
+!
+!          fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
+!              (-state%ikx%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
+!          fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*&
+!              (-state%iky%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
+!          fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
+
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
-              (-state%ikx%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
+              (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
-              (-state%iky%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
+              (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
 
 
           fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
-              (-state%ikx%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
+              (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*&
-              (-state%iky%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
+              (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
 
         end if
@@ -84,8 +126,11 @@ function fu_Nuk(u_f,t)
     stop
   end if
 
-  k_vec(:,:,1) = state%ikx%val(:,:)
-  k_vec(:,:,2) = state%iky%val(:,:)
+  !k_vec(:,:,1) = state%ikx%val(:,:)
+  !k_vec(:,:,2) = state%iky%val(:,:)
+
+  k_vec(:,:,1) = state%ikx_bar%val(:,:)
+  k_vec(:,:,2) = state%iky_bar%val(:,:)
   Nuk_f = crossp(k_vec,u)
 
   call transform(Nuk_f(:,:,1),Nuk(:,:,1),-1,shearing,state%t)
@@ -104,16 +149,22 @@ function fu_Nuk(u_f,t)
   !call dfftw_execute_dft(full2D,Nuk(:,:,1),Nuk_f(:,:,1))
   !call dfftw_execute_dft(full2D,Nuk(:,:,2),Nuk_f(:,:,2))
 
-  div_Nuk_f = (state%ikx%val(:,:)*Nuk_f(:,:,1) &
-              +state%iky%val(:,:)*Nuk_f(:,:,2) )
+ !div_Nuk_f = (state%ikx%val(:,:)*Nuk_f(:,:,1) &
+ !            +state%iky%val(:,:)*Nuk_f(:,:,2) )
+ div_Nuk_f = (state%ikx_bar%val(:,:)*Nuk_f(:,:,1) &
+             +state%iky_bar%val(:,:)*Nuk_f(:,:,2) )
 
   do i=0,xdim-1 
     do j=0,ydim-1 
         if (.NOT.(i==0.AND.j==0)) then
-        fu_Nuk(i,j,1) = Nuk_f(i,j,1)-state%ikx%val(i,j)&
-                          *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
-        fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky%val(i,j)&
-                          *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
+        !fu_Nuk(i,j,1) = Nuk_f(i,j,1)-state%ikx%val(i,j)&
+        !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
+        !fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky%val(i,j)&
+        !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
+        fu_Nuk(i,j,1) = Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+                          *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+        fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+                          *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
         end if
     end do
   end do
@@ -154,27 +205,29 @@ function ft_adv(u_f,temp_f,t)
   !call dfftw_execute_dft(ifull2D,u_f(:,:,2) ,state%dummy%val(:,:,2))
   !call dfftw_execute_dft(ifull2D,temp_f(:,:),state%s_dummy%val(:,:))
 
-  !                                             temp * u          (realspace)
+  !                                   temp       *        u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
   state%dummy%val(:,:,2) = state%s_dummy%val(:,:)*state%dummy%val(:,:,2)
 
   !now trafo temp*u back to fourier space
   call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,state%t)
   call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,state%t)
-
   !call dfftw_execute_dft(full2D,state%dummy%val(:,:,1),state%dummy_f%val(:,:,1))
   !call dfftw_execute_dft(full2D,state%dummy%val(:,:,2),state%dummy_f%val(:,:,2))
   !state%dummy_f%val = state%dummy_f%val/real(xdim*ydim,rp) !FFTW NORM
 ! advection 
- ft_adv(:,:) =-(   state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
-                  +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
+ !ft_adv(:,:) =-(   state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
+ !                 +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
+ ft_adv(:,:) =-(   state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
+                  +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
 end function
 !--------------------------------------
 function ft_diff(temp_f)
   ! temperature diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:)) 
+  !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:)) 
+  ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:)) 
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
 end function
 !--------------------------------------
@@ -232,15 +285,18 @@ function fc_adv(u_f,chem_f,t)
   !state%dummy_f%val = state%dummy_f%val/real(xdim*ydim,rp) !FFTW NORM
 
 ! advection 
- fc_adv(:,:) =-( state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
-                +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
+ !fc_adv(:,:) =-( state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
+ !               +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
+ fc_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
+                +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
 end function
 !--------------------------------------
 function fc_diff(chem_f)
   ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  fc_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*chem_f(:,:))
+  !fc_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*chem_f(:,:))
+  fc_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
 end function
 !--------------------------------------
