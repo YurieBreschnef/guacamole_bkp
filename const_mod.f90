@@ -1,5 +1,5 @@
 module const
-	!constants-module: contains simulation wide constants of parameter type
+	! constants-module: contains simulation wide constants of parameter type
   !if variables are not flagged parameter, they may be temporarily changed (e.g. stepwidth)
 	use ISO_C_BINDING 
   implicit none
