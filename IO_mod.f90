@@ -40,7 +40,8 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=19),parameter					:: path ='./output/data/vort/'
-		write(suffix,"(I5,A9)") state%step/(steps/maxfiles), ".vort.dat"
+		!write(suffix,"(I5,A9)") state%step/(steps/maxfiles), ".vort.dat"
+		write(suffix,"(I5,A9)") int(state%t/write_intervall), ".vort.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -72,7 +73,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=16),parameter					:: path ='./output/data/u/'
-		write(suffix,"(I5,A6)") state%step/(steps/maxfiles), ".u.dat"
+		write(suffix,"(I5,A6)") int(state%t/write_intervall) , ".u.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -97,7 +98,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=19),parameter					:: path ='./output/data/chem/'
-		write(suffix,"(I5,A9)") state%step/(steps/maxfiles), ".chem.dat"
+		write(suffix,"(I5,A9)")  int(state%t/write_intervall), ".chem.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -119,7 +120,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=20),parameter					:: path ='./output/data/abs_u/'
-		write(suffix,"(I5,A10)") state%step/(steps/maxfiles), ".abs_u.dat"
+		write(suffix,"(I5,A10)")  int(state%t/write_intervall), ".abs_u.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -140,7 +141,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=19),parameter					:: path ='./output/data/temp/'
-		write(suffix,"(I5,A9)") state%step/(steps/maxfiles), ".temp.dat"
+		write(suffix,"(I5,A9)")  int(state%t/write_intervall), ".temp.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -163,7 +164,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/div/'
-		write(suffix,"(I5,A8)") state%step/(steps/maxfiles), ".div.dat"
+		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".div.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -176,12 +177,14 @@ module IO_mod
     !write brucker  (k_bar_i * u_i ==0)condition to other dummy
     state%c_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
+    call transform(state%c_dummy_f%val,state%cz_dummy_f%val,-1,1,state%t)
     call dfftw_execute_dft(ifull2D,state%s_dummy_f%val,state%s_dummy%val)
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
 	  			write(20,*) real(i)*(Lx/real(xdim)),real(j)*(Ly/real(ydim))&
 	  			           ,real(state%s_dummy%val(i,j),real_outp_precision)&
-                     ,real(state%c_dummy_f%val(i,j),real_outp_precision)
+                     !,real(state%c_dummy_f%val(i,j),real_outp_precision)
+                     ,real(state%cz_dummy_f%val(i,j),real_outp_precision)
 			end do
 		end do
     close(20)
@@ -193,7 +196,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/buo/'
-		write(suffix,"(I5,A8)") state%step/(steps/maxfiles), ".buo.dat"
+		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".buo.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -217,7 +220,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/u_f/'
-		write(suffix,"(I5,A8)") state%step/(steps/maxfiles), ".u_f.dat"
+		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".u_f.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -241,7 +244,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=21),parameter					:: path ='./output/data/chem_f/'
-		write(suffix,"(I5,A11)") state%step/(steps/maxfiles), ".chem_f.dat"
+		write(suffix,"(I5,A11)")  int(state%t/write_intervall), ".chem_f.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)
@@ -267,7 +270,7 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=21),parameter					:: path ='./output/data/temp_f/'
-		write(suffix,"(I5,A11)") state%step/(steps/maxfiles), ".temp_f.dat"
+		write(suffix,"(I5,A11)")  int(state%t/write_intervall), ".temp_f.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
 		filename = adjustl(filename)

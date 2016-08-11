@@ -36,13 +36,56 @@ module init
     end if
     !if(debuglevel .GE. 1) write(*,*) '-expected finger scale d approximately:',sqrt(sqrt(D_therm*D_visc/(B_therm*S_therm)))
     if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_therm,'|dt:',dt
-    if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dx**2)/diff :Y ',((Ly/real(ydim))**2)/D_therm,'|dt:',dt
+    if(((Lx/real(xdim))**2)/D_therm < dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) ''
+      stop
+    end if
+    if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_therm,'|dt:',dt
+    if(((Ly/real(ydim))**2)/D_therm < dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) ''
+      stop
+    end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_comp,'|dt:',dt
-    if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dx**2)/diff :Y ',((Ly/real(ydim))**2)/D_comp,'|dt:',dt
+    if(((Lx/real(xdim))**2)/D_comp< dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) ''
+      stop
+    end if
+    if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_comp,'|dt:',dt
+    if(((Ly/real(ydim))**2)/D_comp< dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) ''
+      stop
+    end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_visc,'|dt:',dt
-    if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dx**2)/diff :Y ',((Ly/real(ydim))**2)/D_visc,'|dt:',dt
-
- 
+    if(((Lx/real(xdim))**2)/D_visc< dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      write(*,*) ''
+      stop
+    end if
+    if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_visc,'|dt:',dt
+    if(((Ly/real(ydim))**2)/D_visc< dt) then
+      write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
+      write(*,*) '_______________________________________________________________________________________________________________'
+      stop
+    end if
     if(debuglevel .GE. 1) write(*,*) '_________END of Plausibility___ ________________________'
   end subroutine
 
@@ -90,19 +133,19 @@ module init
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    do xpos=xdim/12,11*xdim/12,xdim/12
-      do ypos=ydim/8,7*ydim/8,ydim/8
+    do xpos=xdim/10,9*xdim/10,xdim/10
+      do ypos=ydim/16,15*ydim/16,ydim/16
       amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
-              !state%temp%val(i,j) = state%temp%val(i,j) &
-              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              state%temp%val(i,j) = state%temp%val(i,j) &
+              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
               
 
-              amp = rand()
-              state%temp%val(i,j) = amp
+              !amp = rand()
+              !state%temp%val(i,j) = amp
           end do
         end do
       end do
@@ -165,8 +208,11 @@ module init
     end do
 
     state%ikx_sqr%val = state%ikx%val**2
+    state%ikx_sqr%val(0,0) = epsilon(1.0_rp)
     state%iky_sqr%val = state%iky%val**2
+    state%iky_sqr%val(0,0) = epsilon(1.0_rp)
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
+    state%iki_sqr%val(0,0) = epsilon(1.0_rp)
 
     call set_ik_bar(state%t)  
     if(debuglevel .GE. 1) write(*,*) '  -done with init_k.'

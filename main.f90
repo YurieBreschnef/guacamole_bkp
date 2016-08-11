@@ -40,21 +40,37 @@ program guacamole
       call write_sys_stat()
     end if 
 
-    if(mod(state%step,(steps/maxfiles)).EQ.0) then
+    if(state%t >= last_written) then
       call write_all()
       !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
+      last_written = last_written+write_intervall
     end if 
 
   	if(mod(state%step,(steps/1000)).EQ.0) then
-    !    write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
-    !        '| t:',state%t,'| dt:',dt,'| shearing:',shearing,'|shearstrength:',shear
-        call div_tester()
+        write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
+            '| t:',state%t,'| dt:',dt,'| shearing:',shearing,'|shearstrength:',shear
+    !    call div_tester()
     end if
 
 
-    !if(state%t >tmax/6.0_rp) then
+    !if(state%t >1.0_rp*tmax/5.0_rp) then
     !    shearing = 1
-    !    shear = (state%t-tmax/6.0_rp)/(tmax/(5.0/6.0)) *0.05_rp
+    !    shear = (state%t-tmax/5.0_rp)/(tmax/(5.0)) *0.05_rp
+    !end if
+
+    !if(state%t >2.0_rp*tmax/5.0_rp) then
+    !    shearing = 1
+    !    shear = 0.05_rp
+    !end if
+
+    !if(state%t >3.0_rp*tmax/5.0_rp) then
+    !    shearing = 1
+    !    shear =0.05+ (state%t-3.0*tmax/5.0_rp)/(tmax/(5.0)) *0.05_rp
+    !end if
+
+    !if(state%t >4.0_rp*tmax/5.0_rp) then
+    !    shearing = 1
+    !    shear =0.10
     !end if
 
     call RK4_adjust_dt()

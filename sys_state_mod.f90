@@ -160,8 +160,11 @@ contains
     state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
     state%iky_bar%val(:,:) = state%iky%val(:,:) 
     state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+    state%ikx_bar_sqr%val(0,0) = epsilon(1.0_rp)
     state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
+    state%iky_bar_sqr%val(0,0) = epsilon(1.0_rp)
     state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+    state%iki_bar_sqr%val(0,0) = epsilon(1.0_rp)
     if(shearing ==1) then
       state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
       state%iky_bar%val(:,:) = state%iky%val(:,:) - shear*ktime*state%ikx%val(:,:)

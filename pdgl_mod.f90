@@ -43,10 +43,12 @@ function fu_shear(u_f,t)
           if (.NOT.(i==0.AND.j==0)) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
-             fu_shear(i,j,1) = fu_shear(i,j,1)-((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
+
+             fu_shear(i,j,1) = fu_shear(i,j,1)+((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
-             fu_shear(i,j,2) = fu_shear(i,j,2)-((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             fu_shear(i,j,2) = fu_shear(i,j,2)+((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
+             !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
           end if
       end do
     end do
@@ -95,8 +97,10 @@ function fu_buo(u_f,temp_f,chem_f,t)
 
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
               (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
+
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
               (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
+
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
 
 
