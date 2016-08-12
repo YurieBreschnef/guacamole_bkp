@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#  exit if any called program returns nonzero status
+set -e 
+
 cd output/
 bash clean_data.sh
 bash clean_visual.sh
@@ -10,7 +13,7 @@ bash compile_it.sh
 
 echo "bash: starting run"
 export OMP_NUM_THREADS=4
-./a.out
+./a.out   || { echo 'bash: ----RUN FAILED----' ; exit 1;  }
 echo "bash: run... done"
 
 echo "bash: plotting"

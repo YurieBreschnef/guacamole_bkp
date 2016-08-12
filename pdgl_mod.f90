@@ -17,18 +17,53 @@ function fu(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
-  real(kind = rp)                                           ,intent(in) :: t
+  real(kind = rp)                                  ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
 
   fu = cmplx(0.0_rp,0.0_rp,rp)
-  fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
-  fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
-  fu = fu + fu_shear(u_f,t)               !SHEAR
+  fu = fu + fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
+  !F =       LIN        +   NONLIN
+
+  !fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
+  !fu = fu + fu_diff(u_f,t)                !DIFFUSION
+  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu = fu + fu_shear(u_f,t)               !SHEAR
 
   fu(:,:,1) = dealiase_field(fu(:,:,1))
   fu(:,:,2) = dealiase_field(fu(:,:,2))
-  !_______________________________________________________________
+end function 
+!----------------------------------------
+function fu_L(u_f,t)
+  !linear operator of function fu = L+ N
+  ! maybe used for ETD
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_L
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+  real(kind = rp)                                  ,intent(in) :: t
+  !if(debuglevel .GE. 3) write(*,*) 'function fu called'
+
+  fu_L = cmplx(0.0_rp,0.0_rp,rp)
+  fu_L = fu_L + fu_diff(u_f,t)                !DIFFUSION
+
+  fu_L(:,:,1) = dealiase_field(fu_L(:,:,1))
+  fu_L(:,:,2) = dealiase_field(fu_L(:,:,2))
+end function 
+!----------------------------------------
+function fu_N(u_f,temp_f,chem_f,t)
+  !nonlinear operator of function fu = L+ N
+  !maybe used for ETD
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_N
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
+  real(kind = rp)                                  ,intent(in) :: t
+
+  fu_N = cmplx(0.0_rp,0.0_rp,rp)
+  fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
+  fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
+
+  fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
+  fu_N(:,:,2) = dealiase_field(fu_N(:,:,2))
 end function 
 !----------------------------------------
 function fu_shear(u_f,t)
@@ -97,12 +132,9 @@ function fu_buo(u_f,temp_f,chem_f,t)
 
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
               (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
-
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
               (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
-
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
-
 
           fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
               (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
@@ -152,12 +184,20 @@ function fu_Nuk(u_f,t)
   call transform(Nuk(:,:,2),Nuk_f(:,:,2),1,shearing,state%t)
   !call dfftw_execute_dft(full2D,Nuk(:,:,1),Nuk_f(:,:,1))
   !call dfftw_execute_dft(full2D,Nuk(:,:,2),Nuk_f(:,:,2))
+        IF(ANY(IsNaN(real(Nuk_f))))  then
+          write(*,*) 'func fu_Nuk(): NAN detected in Nuk_f after trafo'
+          stop
+        end if
 
  !div_Nuk_f = (state%ikx%val(:,:)*Nuk_f(:,:,1) &
  !            +state%iky%val(:,:)*Nuk_f(:,:,2) )
  div_Nuk_f = (state%ikx_bar%val(:,:)*Nuk_f(:,:,1) &
              +state%iky_bar%val(:,:)*Nuk_f(:,:,2) )
 
+  IF(ANY(IsNaN(real(Nuk_f))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected before k mult '
+    stop
+  end if
   do i=0,xdim-1 
     do j=0,ydim-1 
         if (.NOT.(i==0.AND.j==0)) then
@@ -165,10 +205,22 @@ function fu_Nuk(u_f,t)
         !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
         !fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky%val(i,j)&
         !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
-        fu_Nuk(i,j,1) = Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+      
+        IF(ANY(IsNaN(real(fu_Nuk))))  then
+          write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j
+          stop
+        end if
+
+        fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
                           *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-        fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+        fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
                           *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+
+        IF(ANY(IsNaN(real(fu_Nuk))))  then
+          write(*,*) 'func fu_Nuk(): NAN detected at pos:',i,j
+          stop
+        end if
+
         end if
     end do
   end do
@@ -187,11 +239,47 @@ function ft(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft(): NAN detected in input array'
+    stop
+  end if
+
   ft = cmplx(0.0,0.0,rp)
-  ft = ft + ft_adv(u_f,temp_f,t)  !ADVECTION
-  ft = ft + ft_diff(temp_f)       !DIFFUSION
-  ft = ft + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  ft = ft + ft_L(temp_f,t) + ft_N(u_f,temp_f,t)  
+  ! F =           LIN       +     NONLIN
+
+  !ft = ft + ft_adv(u_f,temp_f,t)  !ADVECTION
+  !ft = ft + ft_diff(temp_f)       !DIFFUSION
+  !ft = ft + ft_strat(u_f,temp_f)  !BACKGROUND stratification
   ft = dealiase_field(ft)
+end function 
+!--------------------------------------
+function ft_L(temp_f,t)
+  !linear part of temp evolution equation
+  !TODO make transforms as effective as possible
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_L
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
+  real(kind = rp),intent(in)                                   :: t
+  ft_L = cmplx(0.0,0.0,rp)
+  ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
+  ft_L = dealiase_field(ft_L)
+end function 
+!--------------------------------------
+function ft_N(u_f,temp_f,t)
+  ! nonlinear part of temp evolution equation
+  !TODO make transforms as effective as possible
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_N
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
+  real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft_N(): NAN detected in input array'
+    stop
+  end if
+  ft_N = cmplx(0.0,0.0,rp)
+  ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
+  ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  ft_N = dealiase_field(ft_N)
 end function 
 !--------------------------------------
 function ft_adv(u_f,temp_f,t)
@@ -201,6 +289,10 @@ function ft_adv(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft_adv(): NAN detected in input array'
+    stop
+  end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
@@ -230,6 +322,10 @@ function ft_diff(temp_f)
   ! temperature diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+  IF(ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft_adv(): NAN detected in input array'
+    stop
+  end if
   !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:)) 
   ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:)) 
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
@@ -262,6 +358,38 @@ function fc(u_f,chem_f,t)
   !end if
 end function 
 !--------------------------------------
+function fc_L(chem_f,t)
+  !linear part of chem evolution equation
+  !TODO make transforms as effective as possible
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_L
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
+  real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_L(): NAN detected in input array'
+    stop
+  end if
+  fc_L = cmplx(0.0,0.0,rp)
+  fc_L = fc_L + fc_diff(chem_f)       !DIFFUSION
+  fc_L = dealiase_field(fc_L)
+end function 
+!--------------------------------------
+function fc_N(u_f,chem_f,t)
+  ! nonlinear part of chem evolution equation
+  !TODO make transforms as effective as possible
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_N
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
+  real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_N(): NAN detected in input array'
+    stop
+  end if
+  fc_N = cmplx(0.0,0.0,rp)
+  fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
+  fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
+  fc_N = dealiase_field(fc_N)
+end function 
+!--------------------------------------
 function fc_adv(u_f,chem_f,t)
   implicit none
   ! chem advection term  [nabla dot (chem*u)]
@@ -269,6 +397,10 @@ function fc_adv(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_adv(): NAN detected in input array'
+    stop
+  end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
@@ -299,6 +431,10 @@ function fc_diff(chem_f)
   ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
+  IF(ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_diff(): NAN detected in input array'
+    stop
+  end if
   !fc_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*chem_f(:,:))
   fc_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)

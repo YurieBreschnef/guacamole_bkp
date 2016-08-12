@@ -1,5 +1,7 @@
 #!/bin/bash -e
 echo "bash: compile"
+
+
 gfortran -I/usr/include \
 const_mod.f90 \
 sys_state_mod.f90 \
@@ -16,5 +18,6 @@ main.f90 \
 -lfftw3 \
 -lm \
 -O3 \
--g
+-g \
+|| { echo 'bash: ----COMPILATION FAILED----' ; exit 1;  }
 echo "bash: compilation...	 done"

@@ -27,7 +27,7 @@ module test
   subroutine NAN_check(caller)
     !checks a given system state for NAN's ; caller should look like "subroutine blabla"
     !or "function foobar"
-		character(len=16),intent(inout) 		  					:: caller
+		character(*),intent(inout) 		  					:: caller
     IF(ANY(IsNaN(real(state%u%val))))       write(*,*) caller,': NAN detected in array u '
     IF(ANY(IsNaN(real(state%u_f%val))))     write(*,*) caller,': NAN detected in array u_f '
     IF(ANY(IsNaN(real(state%temp%val))))    write(*,*) caller,': NAN detected in array temp '

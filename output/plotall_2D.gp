@@ -1,5 +1,5 @@
 load './gnuplot-palettes-master/jet.pal'    
-aspect_ratio = 2
+aspect_ratio = 1
 no_of_img = 299 
     ####################STATISTICS###############################
     set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
@@ -32,7 +32,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,2
-    set xrange [0.0:59.0]
+   #set xrange [0.0:2.5]
 
 
         set title 'simulation time vs.Temperature measures [arb]'
@@ -59,7 +59,8 @@ no_of_img = 299
              './data/E_stat/E_stat.dat' using 2:4 title "E_{pot}"   ,\
              './data/E_stat/E_stat.dat' using 2:5 title "E_{tot}"  
         set title 'simulation time vs. maximum of divergence field (should be near zero)'
-        plot './data/sys_stat/sys_stat.dat' using 2:3 title "max div"
+        plot './data/sys_stat/sys_stat.dat' using 2:3 title "max div"             ,\
+             './data/sys_stat/sys_stat.dat' using 2:6 title "max div (brucker)"
 
         set title 'simulation time vs. shearstrength '
         plot './data/sys_stat/sys_stat.dat' using 2:4 title "shear strength [arb]"
@@ -100,9 +101,16 @@ do for [i=0:no_of_img] {
 #	set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
 #   	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
 #
-#  	set output './visual/div/'.i.'.png'
-#  	set title 'real part of div (u)'
-#      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
+    #MULTIPLOT FOR DIVERGENCE
+
+    set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
+  	set output './visual/div/'.i.'.png'
+		set multiplot layout 1,2
+  	set title 'real part of div (u) (real space)'
+      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
+  	set title 'real part brucker divergence kbar times u'
+      	plot './data/div/'.i.'.div.dat' using 1:2:4 with image
+    unset multiplot
 
 
     # Multiplot for better visibility:-----------------------------------
@@ -148,9 +156,6 @@ do for [i=0:no_of_img] {
 #      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
   	set title 'fourier spectrum of chem field'
    	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
-
-
-
 
 		unset multiplot
 

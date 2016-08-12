@@ -60,7 +60,9 @@ module sys_state
   end type
 
   !MAIN STATE VARIABLE:
+  type(system_state)                                          ::state_np1 !state n+1
   type(system_state)                                          ::state
+  type(system_state)                                          ::state_nm1 !state n-1
 
 
 contains
@@ -157,23 +159,46 @@ contains
     ! future changes
     real(kind = rp)                              :: ktime
     !TODO very ineffective to reset k's if shearing is off.
-    state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-    state%iky_bar%val(:,:) = state%iky%val(:,:) 
-    state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
-    state%ikx_bar_sqr%val(0,0) = epsilon(1.0_rp)
-    state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
-    state%iky_bar_sqr%val(0,0) = epsilon(1.0_rp)
-    state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
-    state%iki_bar_sqr%val(0,0) = epsilon(1.0_rp)
+
+     IF(ALL((state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp)))  then
+       write(*,*) 'sub set_ik_bar(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
+       stop
+     end if
+
     if(shearing ==1) then
       state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
       state%iky_bar%val(:,:) = state%iky%val(:,:) - shear*ktime*state%ikx%val(:,:)
-
       state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
       state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
-
+      state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+    else
+      state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
+      state%iky_bar%val(:,:) = state%iky%val(:,:) 
+      state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+      state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
+
+   do i=1,xdim-1
+   do j=1,ydim-1
+        IF(real(state%iki_bar_sqr%val(i,j),rp)==0.0_rp)  then
+          write(*,*) 'sub set_ik_bar(): iki_bar ==0.0. possible NAN ahead:',i,j
+          state%iki_bar_sqr%val(i,j) = epsilon(1.0_rp)
+          !stop
+        end if
+        IF(real(state%ikx_bar_sqr%val(i,j),rp)==0.0_rp)  then
+          write(*,*) 'sub set_ik_bar(): ikx_bar ==0.0. possible NAN ahead:',i,j
+          state%ikx_bar_sqr%val(i,j) = epsilon(1.0_rp)
+          !stop
+        end if
+        IF(real(state%iky_bar_sqr%val(i,j),rp)==0.0_rp)  then
+          write(*,*) 'sub set_ik_bar(): iky_bar ==0.0. possible NAN ahead:',i,j
+          state%iky_bar_sqr%val(i,j) = epsilon(1.0_rp)
+          !stop
+        end if
+   end do
+   end do
+
   end subroutine
 
 end module

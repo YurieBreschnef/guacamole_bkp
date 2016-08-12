@@ -18,11 +18,14 @@ program guacamole
 
   call init_all()
   call test_all()
+  ! write initial state to file (name: 0.type.dat)
   call write_all()
+  last_written = last_written+write_intervall
+
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
 
 
-  do main_stp= 1,steps
+  do main_stp= 0,steps
     if(mod(state%step,(measure_every)).EQ.0) then
       call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,state%t)
       call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,state%t)
@@ -40,7 +43,7 @@ program guacamole
       call write_sys_stat()
     end if 
 
-    if(state%t >= last_written) then
+    if(state%t > last_written) then
       call write_all()
       !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
       last_written = last_written+write_intervall
@@ -73,10 +76,12 @@ program guacamole
     !    shear =0.10
     !end if
 
-    call RK4_adjust_dt()
+    !call RK4_adjust_dt()
     call RK4_step()
+
     !call euler_step()
-    !call BogSham_step()
+    !call ETD2_step()
+
     !state%step = state%step+1
     !state%t = state%t+dt
     

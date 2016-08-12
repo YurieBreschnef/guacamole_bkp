@@ -24,6 +24,7 @@ module init
     call init_chem()
     call init_k()
     call init_plausibility()
+    ! TODO write sub to accomodate old state initiation 
     if(debuglevel .GE. 1) write(*,*) '-done with init_all.'
   end subroutine
 
@@ -127,30 +128,30 @@ module init
 
   subroutine init_temp()
     integer                                         ::xpos,ypos
+    integer                                         ::xpoints,ypoints
     real(kind=rp)                                   ::amp
     if(debuglevel .GE.1) write(*,*) '  -calling init_temp()'
     !initialize temp field 
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    do xpos=xdim/10,9*xdim/10,xdim/10
-      do ypos=ydim/16,15*ydim/16,ydim/16
+    xpoints = 5 
+    ypoints = 5
+    do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+      do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
               state%temp%val(i,j) = state%temp%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (40.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(40.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-
-              
-
-              !amp = rand()
-              !state%temp%val(i,j) = amp
+              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+             ! amp = (rand()-0.5_rp)
+             ! state%temp%val(i,j) = amp
           end do
         end do
       end do
     end do
-    state%temp%val = state%temp%val*0.10_rp
+    state%temp%val = state%temp%val*0.010_rp
 
     !call s_trafo(state%temp,state%temp_f,0)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -160,26 +161,29 @@ module init
 
   subroutine init_chem()
     integer                                         ::xpos,ypos
+    integer                                         ::xpoints,ypoints
     real(kind=rp)                                   ::amp
     if(debuglevel .GE. 1) write(*,*) '  -calling init_chem()'
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    !do xpos=xdim/16,xdim,xdim/16
-    !  do ypos=ydim/7,ydim,ydim/7
-    !  amp = rand()
-        do i=0,xdim-1
-          do j=0,ydim-1
+    xpoints = 5 
+    ypoints = 5
+    !do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+    !  do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
+    !  amp = (rand())
+    !    do i=0,xdim-1
+    !      do j=0,ydim-1
     !          state%chem%val(i,j) = state%chem%val(i,j) &
     !          +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
     !                       +(30.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-              amp = rand()
-              state%temp%val(i,j) = amp
-          end do
-        end do
+    !          amp = rand()
+    !          state%temp%val(i,j) = amp
+    !      end do
+    !    end do
     !  end do
     !end do
-    !state%temp%val = state%temp%val/1.0_rp
+    state%temp%val = state%temp%val/1.0_rp
 
     state%chem%val = state%chem%val / 10.0
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
@@ -206,11 +210,16 @@ module init
 
       end do
     end do
+     IF(ALL(state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp))  then
+       write(*,*) 'sub init_k(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
+       stop
+     end if
+
 
     state%ikx_sqr%val = state%ikx%val**2
-    state%ikx_sqr%val(0,0) = epsilon(1.0_rp)
+    state%ikx_sqr%val(0,:) = epsilon(1.0_rp)
     state%iky_sqr%val = state%iky%val**2
-    state%iky_sqr%val(0,0) = epsilon(1.0_rp)
+    state%iky_sqr%val(:,0) = epsilon(1.0_rp)
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
     state%iki_sqr%val(0,0) = epsilon(1.0_rp)
 
