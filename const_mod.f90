@@ -15,14 +15,14 @@ module const
 	integer(kind=ip),parameter		:: ydim	        = 64
 
 	integer(kind = ip),parameter	:: seed 		    = 123123	! seed for random init
-	integer(kind = ip),parameter	:: maxfiles 	  = 200     ! maximum no of output files per type
-	integer(kind = ip),parameter	:: measure_every= 1 		  ! measure diagnostics every X steps
+	integer(kind = ip),parameter	:: maxfiles 	  = 200 ! maximum no of output files per type
+	integer(kind = ip),parameter	:: measure_every= 5  		! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 32.0 !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 32.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 1.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 1.0 !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -30,12 +30,12 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 10._rp
+	real(kind = rp),parameter     :: tmax                      = 20.0_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-2_rp
 
-	real(kind = rp)					      :: dt_max                    = 1.0e-2_rp
-	real(kind = rp)					      :: dt_min                    = 1.0e-7_rp
-	real(kind = rp)					      :: max_step_error            = 1.0e-7_rp
+	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
+	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
+	real(kind = rp)					      :: max_step_error            = 1.0e-6_rp
 	real(kind = rp)					      :: stepwidth_adjustment_rate = 0.05_rp
 	real(kind = rp)					      :: write_intervall           = tmax/real(maxfiles,rp)
 	real(kind = rp)					      :: last_written              = 0.0_rp
@@ -52,16 +52,16 @@ module const
 	real(kind = rp)               :: shear    = 0.00_rp
   integer(kind = ip)            :: shearing = 0
 
-	real(kind = rp),parameter     :: D_visc   = 0.07_rp 
+	real(kind = rp),parameter     :: D_visc   = 0.007_rp 
 
-	real(kind = rp),parameter			:: D_therm  = 0.01_rp
-	real(kind = rp),parameter			:: D_comp   = 0.0002_rp
+	real(kind = rp),parameter			:: D_therm  = 0.001_rp
+	real(kind = rp),parameter			:: D_comp   = 0.00001_rp
 
 
-	real(kind = rp),parameter			:: B_therm  =  1.0_rp
-	real(kind = rp),parameter			:: B_comp   =  2.0_rp
+	real(kind = rp),parameter			:: B_therm  = 1.0_rp
+	real(kind = rp),parameter			:: B_comp   = 10.0_rp
 
-	real(kind = rp),parameter			:: S_therm  = 2.00_rp
-	real(kind = rp),parameter			:: S_comp   =  1.0_rp
+	real(kind = rp),parameter			:: S_therm  = 20.00_rp
+	real(kind = rp),parameter			:: S_comp   = 2.0_rp
 
 end module

@@ -9,7 +9,7 @@ module timestepping
 
 subroutine reset_dt(new_dt)
   ! resets all dt-dependencies to new_dt
-  real(kind=rp)         ::new_dt
+  real(kind = rp)               :: new_dt
   dt      = new_dt
   dt_2    = dt*(1.0_rp/ 2.0_rp)           
   dt_3    = dt*(1.0_rp/ 3.0_rp)       
@@ -129,65 +129,83 @@ subroutine ETD2_step()
   !TODO ineffective to recalculate
   !write(*,*) 'ETD: calculating NL-parts..'
   call set_ik_bar(state%t)
-  do i=0,xdim-1
-    do j=0,ydim-1
-        fu_exp_qh(i,j,1) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(i,j),rp)),0.0_rp)
-        fu_exp_qh(i,j,2) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(i,j),rp)),0.0_rp)
-        ft_exp_qh(i,j) = cmplx(exp(-D_therm*real(state%iki_bar_sqr%val(i,j),rp)),0.0_rp)
-        fc_exp_qh(i,j) = cmplx(exp(-D_comp* real(state%iki_bar_sqr%val(i,j),rp)),0.0_rp)
-    end do
-  end do
+
+  fu_exp_qh(:,:,1) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
+  fu_exp_qh(:,:,2) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
+  ft_exp_qh(:,:)   = cmplx(exp(-D_therm*real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
+  fc_exp_qh(:,:)   = cmplx(exp(-D_comp* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
+  !NOTE the minus sign hidden in iki_bar
+
+  IF(ALL((real(fu_exp_qh,rp).EQ.(0.0_rp))))           write(*,*) 'WARNING: fu_exp_qh is EQ epsilon'
+  IF(ALL((real(fu_exp_qh,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_exp_qh is LE epsilon'
+  IF(ANY((real(fu_exp_qh,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_exp_qh has LE epsilon'
+
 
   fu_NL_n=fu_N(state%u_f%val*fu_exp_qh,state%temp_f%val*ft_exp_qh,state%chem_f%val*fc_exp_qh,state%t)
   ft_NL_n=ft_N(state%u_f%val*fu_exp_qh,state%temp_f%val*ft_exp_qh                           ,state%t)
   fc_NL_n=fc_N(state%u_f%val*fu_exp_qh                           ,state%chem_f%val*fc_exp_qh,state%t)
-
+  !write(*,*)'MAXVAL OF fu_NL_n: Re', MAXVAL(real(fu_NL_n,rp)),'IMAG:',MAXVAL(AIMAG(fu_NL_n)) &
+  !          ,'MAXLOC:', MAXLOC(real(fu_NL_n,rp)),MAXLOC(AIMAG(fu_NL_n))
 
   call set_ik_bar(state%t +dt)
   fu_NL_np1 = fu_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%temp_f%val*ft_exp_qh+dt*ft_NL_n &
     ,state%chem_f%val*fc_exp_qh+dt*fc_NL_n ,state%t+dt)
+  ft_NL_np1 = ft_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%temp_f%val*ft_exp_qh+dt*ft_NL_n,state%t+dt)
   fc_NL_np1 = fc_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%chem_f%val*fc_exp_qh+dt*fc_NL_n,state%t+dt)
-  ft_NL_np1 = fc_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%temp_f%val*ft_exp_qh+dt*ft_NL_n,state%t+dt)
   call set_ik_bar(state%t)
 
-  !IF(ANY(IsNaN(real(fu_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_n   '
-  !IF(ANY(IsNaN(real(fu_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-  !IF(ANY(IsNaN(real(ft_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_n   '
-  !IF(ANY(IsNaN(real(ft_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_np1 '
-  !IF(ANY(IsNaN(real(fc_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_n   '
-  !IF(ANY(IsNaN(real(fc_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_np1 '
+  IF(ANY(IsNaN(real(fu_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_n   '
+  IF(ANY(IsNaN(real(fu_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
+  IF(ANY(IsNaN(real(ft_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_n   '
+  IF(ANY(IsNaN(real(ft_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_np1 '
+  IF(ANY(IsNaN(real(fc_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_n   '
+  IF(ANY(IsNaN(real(fc_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_np1 '
 
-  do i=0,xdim-1
-    do j=0,ydim-1
-      do l = 1,2
-        state%u_f%val(i,j,l) = state%u_f%val(i,j,l)  *exp(D_visc*state%iki_bar_sqr%val(i,j)) &
-                          +dt_2*( fu_NL_n(i,j,l)     *exp(D_visc*state%iki_bar_sqr%val(i,j))   &
-                                  +fu_NL_np1(i,j,l)                                     )
-      end do
-       state%temp_f%val(i,j) = state%temp_f%val(i,j) *exp(D_therm*state%iki_bar_sqr%val(i,j)) &
-                          +dt_2*( ft_NL_n(i,j)       *exp(D_therm*state%iki_bar_sqr%val(i,j))  &
-                                 +ft_NL_np1(i,j)                                        )
- 
-       state%chem_f%val(i,j) = state%chem_f%val(i,j) *exp(D_comp*state%iki_bar_sqr%val(i,j)) &
-                         +dt_2*( fc_NL_n(i,j)        *exp(D_comp*state%iki_bar_sqr%val(i,j)) &
-                                +fc_NL_np1(i,j)                                        )
+  IF(ALL((real(fu_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: fu_NL     does not contribute to timestepping'
+  IF(ALL((real(fu_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_NL     does not contribute to timestepping'
+  IF(ALL((real(fu_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: fu_NL_np1 does not contribute to timestepping'
+  IF(ALL((real(fu_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: fu_NL_np1 does not contribute to timestepping'
+  IF(ALL((real(ft_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: ft_NL     does not contribute to timestepping'
+  IF(ALL((real(ft_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: ft_NL     does not contribute to timestepping'
+  IF(ALL((real(ft_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: ft_NL_np1 does not contribute to timestepping'
+  IF(ALL((real(ft_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: ft_NL_np1 does not contribute to timestepping'
+  IF(ALL((real(fc_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: fc_NL     does not contribute to timestepping'
+  IF(ALL((real(fc_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fc_NL     does not contribute to timestepping'
+  IF(ALL((real(fc_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: fc_NL_np1 does not contribute to timestepping'
+  IF(ALL((real(fc_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: fc_NL_np1 does not contribute to timestepping'
 
-        !NOTE the sign hidden in iki_sqr!
-    end do
+    do l = 1,2
+        state%u_f%val(:,:,l) = state%u_f%val(:,:,l)  *exp(D_visc*state%iki_bar_sqr%val(:,:)*dt) &
+                          +dt_2*( fu_NL_n(:,:,l)     *exp(D_visc*state%iki_bar_sqr%val(:,:)*dt) &
+                                 +fu_NL_np1(:,:,l)                                     )
   end do
 
-  !IF(ANY(IsNaN(real(state_np1%chem_f%val))))  then 
-  !  write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1   '
-  !  stop
-  !end if
-  !IF(ANY(IsNaN(real(state_np1%temp_f%val))))  then 
-  !  write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-  !  stop
-  !end if
-  !IF(ANY(IsNaN(real(state_np1%u_f%val))))     then 
-  !  write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-  !  stop
-  !end if
+       state%temp_f%val(:,:) = state%temp_f%val(:,:) *exp(D_therm*state%iki_bar_sqr%val(:,:)*dt) &
+                          +dt_2*( ft_NL_n(:,:)       *exp(D_therm*state%iki_bar_sqr%val(:,:)*dt) &
+                                 +ft_NL_np1(:,:)                                        )
+ 
+       state%chem_f%val(:,:) = state%chem_f%val(:,:) *exp(D_comp*state%iki_bar_sqr%val(:,:)*dt) &
+                         +dt_2*( fc_NL_n(:,:)        *exp(D_comp*state%iki_bar_sqr%val(:,:)*dt) &
+                                +fc_NL_np1(:,:)                                        )
+                                                        !NOTE the sign hidden in iki_sqr!
+  IF(ANY((real(state%iki_bar_sqr%val) .GT. 0.0_rp)))  then 
+    write(*,*) 'sub ETD2: real part of exponential is greater than 0.sim will explode '
+    stop
+  end if
+
+  IF(ANY(IsNaN(real(state_np1%chem_f%val))))  then 
+    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1   '
+    stop
+  end if
+  IF(ANY(IsNaN(real(state_np1%temp_f%val))))  then 
+    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
+    stop
+  end if
+  IF(ANY(IsNaN(real(state_np1%u_f%val))))     then 
+    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
+    stop
+  end if
+
   state%t           = state%t     +dt
   state%step        = state%step  +1
   !write(*,*) 'sub ETD2: step done.'

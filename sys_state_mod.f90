@@ -160,10 +160,10 @@ contains
     real(kind = rp)                              :: ktime
     !TODO very ineffective to reset k's if shearing is off.
 
-     IF(ALL((state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp)))  then
-       write(*,*) 'sub set_ik_bar(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
-       stop
-     end if
+     !IF(ALL((state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp)))  then
+     !  write(*,*) 'sub set_ik_bar(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
+     !  stop
+     !end if
 
     if(shearing ==1) then
       state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
@@ -179,25 +179,25 @@ contains
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
 
-   do i=1,xdim-1
-   do j=1,ydim-1
-        IF(real(state%iki_bar_sqr%val(i,j),rp)==0.0_rp)  then
-          write(*,*) 'sub set_ik_bar(): iki_bar ==0.0. possible NAN ahead:',i,j
-          state%iki_bar_sqr%val(i,j) = epsilon(1.0_rp)
-          !stop
-        end if
-        IF(real(state%ikx_bar_sqr%val(i,j),rp)==0.0_rp)  then
-          write(*,*) 'sub set_ik_bar(): ikx_bar ==0.0. possible NAN ahead:',i,j
-          state%ikx_bar_sqr%val(i,j) = epsilon(1.0_rp)
-          !stop
-        end if
-        IF(real(state%iky_bar_sqr%val(i,j),rp)==0.0_rp)  then
-          write(*,*) 'sub set_ik_bar(): iky_bar ==0.0. possible NAN ahead:',i,j
-          state%iky_bar_sqr%val(i,j) = epsilon(1.0_rp)
-          !stop
-        end if
-   end do
-   end do
+   !do i=1,xdim-1
+   !do j=1,ydim-1
+   !     IF(real(state%iki_bar_sqr%val(i,j),rp)==0.0_rp)  then
+   !       write(*,*) 'sub set_ik_bar(): iki_bar ==0.0. possible NAN ahead:',i,j
+   !       state%iki_bar_sqr%val(i,j) = epsilon(1.0_rp)
+   !       !stop
+   !     end if
+   !     IF(real(state%ikx_bar_sqr%val(i,j),rp)==0.0_rp)  then
+   !       write(*,*) 'sub set_ik_bar(): ikx_bar ==0.0. possible NAN ahead:',i,j
+   !       state%ikx_bar_sqr%val(i,j) = epsilon(1.0_rp)
+   !       !stop
+   !     end if
+   !     IF(real(state%iky_bar_sqr%val(i,j),rp)==0.0_rp)  then
+   !       write(*,*) 'sub set_ik_bar(): iky_bar ==0.0. possible NAN ahead:',i,j
+   !       state%iky_bar_sqr%val(i,j) = epsilon(1.0_rp)
+   !       !stop
+   !     end if
+   !end do
+   !end do
 
   end subroutine
 

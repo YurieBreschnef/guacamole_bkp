@@ -8,8 +8,8 @@ module trafo
 
   subroutine dealiase_all()
     !dealiase the complete system state
-     state%temp_f%val       = dealiase_field(state%temp_f%val) 
-     state%chem_f%val       = dealiase_field(state%chem_f%val) 
+     state%temp_f%val     = dealiase_field(state%temp_f%val) 
+     state%chem_f%val     = dealiase_field(state%chem_f%val) 
      state%u_f%val(:,:,1) = dealiase_field(state%u_f%val(:,:,1)) 
      state%u_f%val(:,:,2) = dealiase_field(state%u_f%val(:,:,2)) 
   end subroutine

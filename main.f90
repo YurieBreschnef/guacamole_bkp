@@ -77,10 +77,10 @@ program guacamole
     !end if
 
     !call RK4_adjust_dt()
-    call RK4_step()
+    !call RK4_step()
 
     !call euler_step()
-    !call ETD2_step()
+    call ETD2_step()
 
     !state%step = state%step+1
     !state%t = state%t+dt

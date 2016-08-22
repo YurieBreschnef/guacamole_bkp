@@ -111,15 +111,32 @@ module init
   end subroutine
   
   subroutine init_u()
+    real(kind=rp)                                   ::amp
+    integer                                         ::xmodes,ymodes
     !initialize velocity field 
     if(debuglevel .GE. 1) write(*,*) '  -calling init_u()'
     state%u%val = cmplx(0.0_rp,0.0_rp,rp)
+
+
+    xmodes = xdim/16
+    ymodes = ydim/16 
+
     do i=0,xdim-1
       do j=0,ydim-1
-
+        state%u%val(i,j,1) = sin(xmodes * (real(j)/real(ydim)*2.0_rp*pi))
+        state%u%val(i,j,2) = sin(ymodes * (real(i)/real(xdim)*2.0_rp*pi))
       end do
     end do
-    state%u%val = state%u%val /10.0_rp                             
+    !do i=0,xdim-1
+    !  do j=0,ydim-1
+    !    amp = rand()
+    !    state%u%val(i,j,1) = real((amp-0.5_rp),rp)
+    !    amp = rand()
+    !    state%u%val(i,j,2) = real((amp-0.5_rp),rp)
+    !  end do
+    !end do
+
+    state%u%val = state%u%val *0.05_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val = state%u_f%val/real(xdim*ydim,rp)   !FFTW NORM
@@ -133,25 +150,25 @@ module init
     if(debuglevel .GE.1) write(*,*) '  -calling init_temp()'
     !initialize temp field 
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
-    state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 5 
-    ypoints = 5
-    do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
-      do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
-      amp = rand()
+   ! xpoints = 8 
+   ! ypoints = 8
+   ! do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+   !   do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
+   !   amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
-              state%temp%val(i,j) = state%temp%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-             ! amp = (rand()-0.5_rp)
-             ! state%temp%val(i,j) = amp
+             ! state%temp%val(i,j) = state%temp%val(i,j) &
+             ! +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+             !              +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              amp = (rand()-0.5_rp)
+              state%temp%val(i,j) = amp
           end do
         end do
-      end do
-    end do
-    state%temp%val = state%temp%val*0.010_rp
+   !   end do
+   ! end do
+    state%temp%val = state%temp%val*0.05_rp
 
     !call s_trafo(state%temp,state%temp_f,0)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -167,25 +184,25 @@ module init
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 5 
-    ypoints = 5
+    !xpoints = 8 
+    !ypoints = 8
     !do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
     !  do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
     !  amp = (rand())
-    !    do i=0,xdim-1
-    !      do j=0,ydim-1
-    !          state%chem%val(i,j) = state%chem%val(i,j) &
-    !          +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-    !                       +(30.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-    !          amp = rand()
-    !          state%temp%val(i,j) = amp
-    !      end do
-    !    end do
+        do i=0,xdim-1
+          do j=0,ydim-1
+              !state%chem%val(i,j) = state%chem%val(i,j) &
+              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+
+              amp = (rand()-0.5_rp)
+              state%chem%val(i,j) = amp
+          end do
+        end do
     !  end do
     !end do
-    state%temp%val = state%temp%val/1.0_rp
+    state%chem%val = state%chem%val * 0.05
 
-    state%chem%val = state%chem%val / 10.0
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM
     if(debuglevel .GE. 1) write(*,*) '  -done with init_chem.'
@@ -223,6 +240,22 @@ module init
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
     state%iki_sqr%val(0,0) = epsilon(1.0_rp)
 
+    IF(ANY(IsNaN(real(state%ikx%val))))  then
+      write(*,*) 'init_k(): NAN detected! in real part of ikx'
+      stop
+    end if
+    IF(ANY(IsNaN(real(state%iky%val))))  then
+      write(*,*) 'init_k(): NAN detected! in real part of iky'
+      stop
+    end if
+    IF(ANY(IsNaN(AIMAG(state%ikx%val))))  then
+      write(*,*) 'init_k(): NAN detected! in imag part of ikx'
+      stop
+    end if
+    IF(ANY(IsNaN(AIMAG(state%iky%val))))  then
+      write(*,*) 'init_k(): NAN detected! in imag part of iky'
+      stop
+    end if
     call set_ik_bar(state%t)  
     if(debuglevel .GE. 1) write(*,*) '  -done with init_k.'
   end subroutine
