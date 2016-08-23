@@ -43,7 +43,8 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_therm,'|dt:',dt
     if(((Ly/real(ydim))**2)/D_therm < dt) then
@@ -52,7 +53,8 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_comp,'|dt:',dt
     if(((Lx/real(xdim))**2)/D_comp< dt) then
@@ -61,7 +63,8 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_comp,'|dt:',dt
     if(((Ly/real(ydim))**2)/D_comp< dt) then
@@ -70,7 +73,8 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_visc,'|dt:',dt
     if(((Lx/real(xdim))**2)/D_visc< dt) then
@@ -79,14 +83,21 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_visc,'|dt:',dt
     if(((Ly/real(ydim))**2)/D_visc< dt) then
+      write(*,*) ''
+      write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
-      stop
+      !stop
+      !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
+    write(*,*) 'smallest possible number:', epsilon(1.0_rp)
+    write(*,*) '1/eps:', 1.0/epsilon(1.0_rp)
+    write(*,*) '1/eps**2:', 1.0/epsilon(1.0_rp)**2
     if(debuglevel .GE. 1) write(*,*) '_________END of Plausibility___ ________________________'
   end subroutine
 
@@ -118,13 +129,13 @@ module init
     state%u%val = cmplx(0.0_rp,0.0_rp,rp)
 
 
-    xmodes = xdim/16
-    ymodes = ydim/16 
+    xmodes = 2 !xdim/2
+    ymodes = 2 !ydim/16 
 
     do i=0,xdim-1
       do j=0,ydim-1
-        state%u%val(i,j,1) = sin(xmodes * (real(j)/real(ydim)*2.0_rp*pi))
-        state%u%val(i,j,2) = sin(ymodes * (real(i)/real(xdim)*2.0_rp*pi))
+        state%u%val(i,j,1) = sin(real(xmodes) * (real(j)/real(ydim))*2.0_rp*pi)
+        state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
       end do
     end do
     !do i=0,xdim-1
@@ -136,7 +147,7 @@ module init
     !  end do
     !end do
 
-    state%u%val = state%u%val *0.05_rp                             
+    state%u%val = state%u%val *0.00001_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val = state%u_f%val/real(xdim*ydim,rp)   !FFTW NORM
@@ -239,6 +250,9 @@ module init
     state%iky_sqr%val(:,0) = epsilon(1.0_rp)
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
     state%iki_sqr%val(0,0) = epsilon(1.0_rp)
+    write(*,*) 'epsilon:',epsilon(1.0_rp)
+    write(*,*) '1/epsilon:',1.0_rp/epsilon(1.0_rp)
+    write(*,*) '1/epsilon**2:',1.0_rp/(epsilon(1.0_rp)**2)
 
     IF(ANY(IsNaN(real(state%ikx%val))))  then
       write(*,*) 'init_k(): NAN detected! in real part of ikx'

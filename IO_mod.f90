@@ -381,6 +381,7 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
+    !write(*,*) 'sub write_T_stat() has been called'
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_T_stat!'

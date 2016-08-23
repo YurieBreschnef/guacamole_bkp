@@ -179,26 +179,6 @@ contains
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
 
-   !do i=1,xdim-1
-   !do j=1,ydim-1
-   !     IF(real(state%iki_bar_sqr%val(i,j),rp)==0.0_rp)  then
-   !       write(*,*) 'sub set_ik_bar(): iki_bar ==0.0. possible NAN ahead:',i,j
-   !       state%iki_bar_sqr%val(i,j) = epsilon(1.0_rp)
-   !       !stop
-   !     end if
-   !     IF(real(state%ikx_bar_sqr%val(i,j),rp)==0.0_rp)  then
-   !       write(*,*) 'sub set_ik_bar(): ikx_bar ==0.0. possible NAN ahead:',i,j
-   !       state%ikx_bar_sqr%val(i,j) = epsilon(1.0_rp)
-   !       !stop
-   !     end if
-   !     IF(real(state%iky_bar_sqr%val(i,j),rp)==0.0_rp)  then
-   !       write(*,*) 'sub set_ik_bar(): iky_bar ==0.0. possible NAN ahead:',i,j
-   !       state%iky_bar_sqr%val(i,j) = epsilon(1.0_rp)
-   !       !stop
-   !     end if
-   !end do
-   !end do
-
   end subroutine
 
 end module

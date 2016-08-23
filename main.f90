@@ -58,7 +58,7 @@ program guacamole
 
     !if(state%t >1.0_rp*tmax/5.0_rp) then
     !    shearing = 1
-    !    shear = (state%t-tmax/5.0_rp)/(tmax/(5.0)) *0.05_rp
+    !    shear =  0.1
     !end if
 
     !if(state%t >2.0_rp*tmax/5.0_rp) then
@@ -77,8 +77,8 @@ program guacamole
     !end if
 
     !call RK4_adjust_dt()
-    !call RK4_step()
 
+    !call RK4_step()
     !call euler_step()
     call ETD2_step()
 

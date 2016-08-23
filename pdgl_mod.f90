@@ -21,7 +21,7 @@ function fu(u_f,temp_f,chem_f,t)
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
 
   fu = cmplx(0.0_rp,0.0_rp,rp)
-  fu = fu + fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
+  fu = fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
   !F =       LIN        +   NONLIN
 
   !fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
@@ -63,10 +63,10 @@ function fu_N(u_f,temp_f,chem_f,t)
     write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array chem_f'
   end if
   IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
-    write(*,*) 'func fu_N():WARNING: all zeroesdetected in input array temp_f'
+    write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
   end if
   fu_N = cmplx(0.0_rp,0.0_rp,rp)
-  fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
+  fu_N = fu_N + fu_Nuk(u_f,t)                !Nonlinear part
   fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
   fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
@@ -169,77 +169,75 @@ function fu_Nuk(u_f,t)
     write(*,*) 'func fu_Nuk(): NAN detected in input array u_f'
     stop
   end if
+  call set_ik_bar(t)
   k_vec(:,:,1) = state%ikx_bar%val(:,:)
   k_vec(:,:,2) = state%iky_bar%val(:,:)
-  Nuk_f = crossp(k_vec,u)
+  !do crossproduct
+  Nuk_f = crossp(k_vec,u_f)
+
+  IF(ANY(IsNaN(real(Nuk_f))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected after crossp of nabla x u'
+    stop
+  end if
 
   call transform(Nuk_f(:,:,1),Nuk(:,:,1),-1,shearing,state%t)
   call transform(Nuk_f(:,:,2),Nuk(:,:,2),-1,shearing,state%t)
   call transform(u_f(:,:,1),u(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),u(:,:,2),-1,shearing,state%t)
-  !call dfftw_execute_dft(ifull2D,Nuk_f(:,:,1),Nuk(:,:,1))
-  !call dfftw_execute_dft(ifull2D,Nuk_f(:,:,2),Nuk(:,:,2))
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,1),u(:,:,1))
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,2),u(:,:,2))
 
-  Nuk = crossp(-Nuk,u)
+  !do crossproduct
+  Nuk = crossp(Nuk,u)
+  IF(ANY(IsNaN(real(Nuk))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected in Nuk after crossp in realspace'
+    stop
+  end if
 
   call transform(Nuk(:,:,1),Nuk_f(:,:,1),1,shearing,state%t)
   call transform(Nuk(:,:,2),Nuk_f(:,:,2),1,shearing,state%t)
-  !call dfftw_execute_dft(full2D,Nuk(:,:,1),Nuk_f(:,:,1))
-  !call dfftw_execute_dft(full2D,Nuk(:,:,2),Nuk_f(:,:,2))
-        IF(ANY(IsNaN(real(Nuk_f))))  then
-          write(*,*) 'func fu_Nuk(): NAN detected in Nuk_f after trafo'
-          stop
-        end if
+  IF(ANY(IsNaN(real(Nuk_f))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected in Nuk_f after trafo'
+    stop
+  end if
 
- !div_Nuk_f = (state%ikx%val(:,:)*Nuk_f(:,:,1) &
- !            +state%iky%val(:,:)*Nuk_f(:,:,2) )
  div_Nuk_f = (state%ikx_bar%val(:,:)*Nuk_f(:,:,1) &
              +state%iky_bar%val(:,:)*Nuk_f(:,:,2) )
 
-  !IF(ANY(IsNaN(real(Nuk_f))))  then
-  !  write(*,*) 'func fu_Nuk(): NAN detected before k mult '
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(Nuk_f))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected before k mult '
+    !stop
+  end if
 
   do i=0,xdim-1 
     do j=0,ydim-1 
         if (.NOT.(i==0.AND.j==0)) then
-        !fu_Nuk(i,j,1) = Nuk_f(i,j,1)-state%ikx%val(i,j)&
-        !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
-        !fu_Nuk(i,j,2) = Nuk_f(i,j,2)-state%iky%val(i,j)&
-        !                  *div_Nuk_f(i,j)/state%iki_sqr%val(i,j)
       
-        IF(ANY(IsNaN(real(fu_Nuk))))  then
-          write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j
-          stop
-        end if
-
-        if(state%iki_bar_sqr%val(i,j).EQ.cmplx(0.0_rp,0.0_rp)) then
-          write(*,*) 'func fu_Nuk(): zero in k-vec NAN imminent at pos (bef):',i,j
-          stop
-        end if 
-
-        fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
-                          *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-        fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
-                          *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-
-        !IF(ANY(IsNaN(real(fu_Nuk))))  then
-        !  write(*,*) 'func fu_Nuk(): NAN detected at pos:',i,j
+        !IF(ANY(IsNaN(real(fu_Nuk(i,j,1)))))  then
+        !  write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j,1
         !  stop
         !end if
 
+        !if(state%iki_bar_sqr%val(i,j).EQ.cmplx(0.0_rp,0.0_rp)) then
+        !  write(*,*) 'func fu_Nuk(): zero in k-vec NAN imminent at pos (bef):',i,j
+        !  stop
+        !end if 
+        IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
+          fu_Nuk(i,j,1) =-Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+                            *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+          fu_Nuk(i,j,2) =-Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+                            *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+        else
+          write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
+          stop
+        end if
         end if
     end do
   end do
 
 
-  !IF(ANY(IsNaN(real(fu_Nuk))))  then
-  !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(fu_Nuk))))  then
+    write(*,*) 'func fu_Nuk(): NAN detected in output array'
+    stop
+  end if
 end function
 !---------------------------F_temp------------------------------------------------------------
 function ft(u_f,temp_f,t)
@@ -305,10 +303,10 @@ function ft_adv(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-  !  write(*,*) 'func ft_adv(): NAN detected in input array'
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft_adv(): NAN detected in input array'
+    stop
+  end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
@@ -338,10 +336,10 @@ function ft_diff(temp_f)
   ! temperature diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  !IF(ANY(IsNaN(real(temp_f))))  then
-  !  write(*,*) 'func ft_adv(): NAN detected in input array'
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(temp_f))))  then
+    write(*,*) 'func ft_adv(): NAN detected in input array'
+    stop
+  end if
   !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:)) 
   ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:)) 
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
@@ -402,10 +400,10 @@ function fc_N(u_f,chem_f,t)
   !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
   !  write(*,*) 'func fc_N(): WARNING ALL ZEROES detected in input array chem_f'
   !end if
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-  !  write(*,*) 'func fc_N(): NAN detected in input array'
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_N(): NAN detected in input array'
+    stop
+  end if
   fc_N = cmplx(0.0,0.0,rp)
   fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
   fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
@@ -420,10 +418,10 @@ function fc_adv(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-  !  write(*,*) 'func fc_adv(): NAN detected in input array'
-  !  stop
-  !end if
+  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+    write(*,*) 'func fc_adv(): NAN detected in input array'
+    stop
+  end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)

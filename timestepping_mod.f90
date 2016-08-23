@@ -6,7 +6,6 @@ module timestepping
   implicit none
 
   contains
-
 subroutine reset_dt(new_dt)
   ! resets all dt-dependencies to new_dt
   real(kind = rp)               :: new_dt
@@ -114,101 +113,136 @@ end subroutine
 !-------------------------------------------------------------------------------------------
 subroutine ETD2_step()
 !perfomrs ETD2 timestep
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_NL_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_NL_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_NL_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_NL_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_NL_n
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_NL_np1
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_exp_qh
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_exp_qh
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_exp_qh
-  real(kind = rp)                                              :: q,qsqr
-  real(kind = rp)                                              :: qh
-
-  !TODO ineffective to recalculate
-  !write(*,*) 'ETD: calculating NL-parts..'
-  call set_ik_bar(state%t)
-
-  fu_exp_qh(:,:,1) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
-  fu_exp_qh(:,:,2) = cmplx(exp(-D_visc* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
-  ft_exp_qh(:,:)   = cmplx(exp(-D_therm*real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
-  fc_exp_qh(:,:)   = cmplx(exp(-D_comp* real(state%iki_bar_sqr%val(:,:),rp)*dt),0.0_rp,rp)
-  !NOTE the minus sign hidden in iki_bar
-
-  IF(ALL((real(fu_exp_qh,rp).EQ.(0.0_rp))))           write(*,*) 'WARNING: fu_exp_qh is EQ epsilon'
-  IF(ALL((real(fu_exp_qh,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_exp_qh is LE epsilon'
-  IF(ANY((real(fu_exp_qh,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_exp_qh has LE epsilon'
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_nm1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_exp_qh ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_n_factor 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u_RHS_nm1_factor 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_nm1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_exp_qh ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_n_factor 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: t_RHS_nm1_factor 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_q
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_n
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_nm1
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_exp_qh ! read as exp(q*h)
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_n_factor 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_nm1_factor 
 
 
-  fu_NL_n=fu_N(state%u_f%val*fu_exp_qh,state%temp_f%val*ft_exp_qh,state%chem_f%val*fc_exp_qh,state%t)
-  ft_NL_n=ft_N(state%u_f%val*fu_exp_qh,state%temp_f%val*ft_exp_qh                           ,state%t)
-  fc_NL_n=fc_N(state%u_f%val*fu_exp_qh                           ,state%chem_f%val*fc_exp_qh,state%t)
-  !write(*,*)'MAXVAL OF fu_NL_n: Re', MAXVAL(real(fu_NL_n,rp)),'IMAG:',MAXVAL(AIMAG(fu_NL_n)) &
-  !          ,'MAXLOC:', MAXLOC(real(fu_NL_n,rp)),MAXLOC(AIMAG(fu_NL_n))
+  if(state%step ==0) then
+    !the very first step of sim is done in euler way because ETD2 needs the past time variable 
+    !RHS_nm1 (read as n minus one)
+    ! set initial state as the old state
+    state_nm1 = state
+    call set_ik_bar(state%t) 
+    ! set nm1 variables
+    u_RHS_nm1 = fu_N(state_nm1%u_f%val,state_nm1%temp_f%val,state_nm1%chem_f%val,state_nm1%t)
+    t_RHS_nm1 = ft_N(state_nm1%u_f%val,state_nm1%temp_f%val                     ,state_nm1%t)
+    c_RHS_nm1 = fc_N(state_nm1%u_f%val                     ,state_nm1%chem_f%val,state_nm1%t)
+    ! now do first step as euler step
+	  state%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,state%t) 
+	  state%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val                 ,state%t)     
+	  state%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val                  ,state%chem_f%val,state%t)     
+	  state%t=state%t+dt
+	  state%step=state%step+1
+    write(*,*) 'initial timestep done with euler'
+    return
+  end if
+  ! calc  RHS_nm1 and RHS_n (read as n minus one)
+  u_RHS_nm1 = fu_N(state_nm1%u_f%val,state_nm1%temp_f%val,state_nm1%chem_f%val,state_nm1%t)
+  t_RHS_nm1 = ft_N(state_nm1%u_f%val,state_nm1%temp_f%val                     ,state_nm1%t)
+  c_RHS_nm1 = fc_N(state_nm1%u_f%val                     ,state_nm1%chem_f%val,state_nm1%t)
+  u_RHS_n   = fu_N(state%u_f%val,state%temp_f%val,state%chem_f%val,state%t)
+  t_RHS_n   = ft_N(state%u_f%val,state%temp_f%val                 ,state%t)
+  c_RHS_n   = fc_N(state%u_f%val                 ,state%chem_f%val,state%t)
 
-  call set_ik_bar(state%t +dt)
-  fu_NL_np1 = fu_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%temp_f%val*ft_exp_qh+dt*ft_NL_n &
-    ,state%chem_f%val*fc_exp_qh+dt*fc_NL_n ,state%t+dt)
-  ft_NL_np1 = ft_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%temp_f%val*ft_exp_qh+dt*ft_NL_n,state%t+dt)
-  fc_NL_np1 = fc_N(state%u_f%val*fu_exp_qh+dt*fu_NL_n,state%chem_f%val*fc_exp_qh+dt*fc_NL_n,state%t+dt)
-  call set_ik_bar(state%t)
+  ! set q-values for exponent, note the minus sign in iki_sqr
+  u_q(:,:,1) = D_visc  *state%iki_bar_sqr%val(:,:)
+  u_q(:,:,2) = D_visc  *state%iki_bar_sqr%val(:,:)
+  t_q = D_therm *state%iki_bar_sqr%val
+  c_q = D_comp  *state%iki_bar_sqr%val
 
-  IF(ANY(IsNaN(real(fu_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_n   '
-  IF(ANY(IsNaN(real(fu_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-  IF(ANY(IsNaN(real(ft_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_n   '
-  IF(ANY(IsNaN(real(ft_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array ft_NL_np1 '
-  IF(ANY(IsNaN(real(fc_NL_n  ))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_n   '
-  IF(ANY(IsNaN(real(fc_NL_np1))))       write(*,*) 'sub ETD2: NAN detected in array fc_NL_np1 '
+  ! calc exponentials for multiplication
+  u_exp_qh = exp(u_q*dt)
+  t_exp_qh = exp(t_q*dt)
+  c_exp_qh = exp(c_q*dt)
 
-  IF(ALL((real(fu_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: fu_NL     does not contribute to timestepping'
-  IF(ALL((real(fu_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fu_NL     does not contribute to timestepping'
-  IF(ALL((real(fu_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: fu_NL_np1 does not contribute to timestepping'
-  IF(ALL((real(fu_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: fu_NL_np1 does not contribute to timestepping'
-  IF(ALL((real(ft_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: ft_NL     does not contribute to timestepping'
-  IF(ALL((real(ft_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: ft_NL     does not contribute to timestepping'
-  IF(ALL((real(ft_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: ft_NL_np1 does not contribute to timestepping'
-  IF(ALL((real(ft_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: ft_NL_np1 does not contribute to timestepping'
-  IF(ALL((real(fc_NL_n,rp).EQ.0.0_rp)))             write(*,*) 'WARNING: fc_NL     does not contribute to timestepping'
-  IF(ALL((real(fc_NL_n,rp).LE.epsilon(1.0_rp))))    write(*,*) 'WARNING: fc_NL     does not contribute to timestepping'
-  IF(ALL((real(fc_NL_np1,rp).EQ.0.0_rp)))           write(*,*) 'WARNING: fc_NL_np1 does not contribute to timestepping'
-  IF(ALL((real(fc_NL_np1,rp).LE.epsilon(1.0_rp))))  write(*,*) 'WARNING: fc_NL_np1 does not contribute to timestepping'
+  ! set factors to zero (especially the (0,0) index to prevent NAN by division)
+  u_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)
+  u_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)
+  t_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)
+  c_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)
+  u_RHS_nm1_factor = cmplx(0.0_rp,0.0_rp,rp)
+  u_RHS_nm1_factor = cmplx(0.0_rp,0.0_rp,rp)
+  t_RHS_nm1_factor = cmplx(0.0_rp,0.0_rp,rp)
+  c_RHS_nm1_factor = cmplx(0.0_rp,0.0_rp,rp)
+  ! calc factors which go before RHS_n  and RHS_nm1 when timestep is made
+  do i=0,xdim-1
+   do j=0,ydim-1
+    if(.NOT.(i==0.AND.j==0))then
+      if(.NOT.(IsNAN(real(1.0_rp/(dt*u_q(i,j,1)**2)))))then
+        u_RHS_n_factor(i,j,1)  =((1.0_rp + dt * u_q(i,j,1)) -1.0_rp -2.0_rp*dt*u_q(i,j,1))/(dt*u_q(i,j,1)**2)
+        u_RHS_n_factor(i,j,2)  =((1.0_rp + dt * u_q(i,j,2)) -1.0_rp -2.0_rp*dt*u_q(i,j,2))/(dt*u_q(i,j,2)**2)
 
-    do l = 1,2
-        state%u_f%val(:,:,l) = state%u_f%val(:,:,l)  *exp(D_visc*state%iki_bar_sqr%val(:,:)*dt) &
-                          +dt_2*( fu_NL_n(:,:,l)     *exp(D_visc*state%iki_bar_sqr%val(:,:)*dt) &
-                                 +fu_NL_np1(:,:,l)                                     )
+        t_RHS_n_factor(i,j)    =((1.0_rp + dt * t_q(i,j))   -1.0_rp -2.0_rp*dt*t_q(i,j))  /(dt*t_q(i,j)**2)
+        c_RHS_n_factor(i,j)    =((1.0_rp + dt * c_q(i,j))   -1.0_rp -2.0_rp*dt*c_q(i,j))  /(dt*c_q(i,j)**2)
+
+        u_RHS_nm1_factor(i,j,1)=(-u_exp_qh(i,j,1) + 1.0_rp + dt * u_q(i,j,1))/(dt*u_q(i,j,1)**2)
+        u_RHS_nm1_factor(i,j,2)=(-u_exp_qh(i,j,2) + 1.0_rp + dt * u_q(i,j,2))/(dt*u_q(i,j,2)**2)
+
+        t_RHS_nm1_factor(i,j)  = (-t_exp_qh(i,j)   + 1.0_rp + dt * t_q(i,j))  /(dt*t_q(i,j)**2)
+        c_RHS_nm1_factor(i,j)  = (-c_exp_qh(i,j)   + 1.0_rp + dt * c_q(i,j))  /(dt*c_q(i,j)**2)
+      else 
+        write(*,*) 'ETD2: sub skipped the calc of RHS-factors because 1/(dt*k**4) is nan!'
+      end if
+    end if
+   end do
   end do
 
-       state%temp_f%val(:,:) = state%temp_f%val(:,:) *exp(D_therm*state%iki_bar_sqr%val(:,:)*dt) &
-                          +dt_2*( ft_NL_n(:,:)       *exp(D_therm*state%iki_bar_sqr%val(:,:)*dt) &
-                                 +ft_NL_np1(:,:)                                        )
- 
-       state%chem_f%val(:,:) = state%chem_f%val(:,:) *exp(D_comp*state%iki_bar_sqr%val(:,:)*dt) &
-                         +dt_2*( fc_NL_n(:,:)        *exp(D_comp*state%iki_bar_sqr%val(:,:)*dt) &
-                                +fc_NL_np1(:,:)                                        )
-                                                        !NOTE the sign hidden in iki_sqr!
-  IF(ANY((real(state%iki_bar_sqr%val) .GT. 0.0_rp)))  then 
-    write(*,*) 'sub ETD2: real part of exponential is greater than 0.sim will explode '
-    stop
-  end if
+  do i=0,xdim-1
+   do j=0,ydim-1
+    if(.NOT.(i==0.AND.j==0))then
+    if(IsNaN(real(1.0_rp/(dt*u_q(i,j,1)**2))))  then
+      write(*,*) 'NAN detected in 1.0/u_q**2 at pos:',i,j,'u_q(i,j,1)=',u_q(i,j,1)
+    end if
 
-  IF(ANY(IsNaN(real(state_np1%chem_f%val))))  then 
-    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1   '
-    stop
-  end if
-  IF(ANY(IsNaN(real(state_np1%temp_f%val))))  then 
-    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-    stop
-  end if
-  IF(ANY(IsNaN(real(state_np1%u_f%val))))     then 
-    write(*,*) 'sub ETD2: NAN detected in array fu_NL_np1 '
-    stop
-  end if
+    if(IsNaN(real(u_RHS_n_factor(i,j,1))))  then
+      write(*,*) 'NAN detected in u_RHS_n at pos:',i,j,'u_RHS_n(i,j,1)=',u_RHS_n_factor(i,j,1)
+    end if
+
+    if(IsNaN(real(u_RHS_nm1_factor(i,j,1))))  then
+      write(*,*) 'NAN detected in u_RHS_n at pos:',i,j,'u_RHS_n(i,j,1)=',u_RHS_nm1_factor(i,j,1)
+    end if
+
+    if(IsNaN(real(1.0_rp/(dt*u_q(i,j,2)**2))))  then
+      write(*,*) 'NAN detected in 1.0/u_q**2 at pos:',i,j,'u_q(i,j,2)=',u_q(i,j,2)
+    end if
+    end if
+   end do
+  end do
+
+  ! set the factors to zero where 1/q_sqr would produce NAN otherwise
+  u_RHS_n_factor(0,0,:)   = cmplx(0.0_rp,0.0_rp,rp) 
+  t_RHS_n_factor(0,0)     = cmplx(0.0_rp,0.0_rp,rp) 
+  c_RHS_n_factor(0,0)     = cmplx(0.0_rp,0.0_rp,rp) 
+  u_RHS_nm1_factor(0,0,:) = cmplx(0.0_rp,0.0_rp,rp) 
+  t_RHS_nm1_factor(0,0)   = cmplx(0.0_rp,0.0_rp,rp) 
+  c_RHS_nm1_factor(0,0)   = cmplx(0.0_rp,0.0_rp,rp) 
+
+  !set the current state to be the new old step
+  state_nm1 = state
+  ! make step
+  state%u_f%val   =state%u_f%val    *u_exp_qh + u_RHS_n*u_RHS_n_factor + u_RHS_nm1*u_RHS_nm1_factor
+  state%temp_f%val=state%temp_f%val *t_exp_qh + t_RHS_n*t_RHS_n_factor + t_RHS_nm1*t_RHS_nm1_factor
+  state%chem_f%val=state%chem_f%val *c_exp_qh + c_RHS_n*c_RHS_n_factor + c_RHS_nm1*c_RHS_nm1_factor
 
   state%t           = state%t     +dt
   state%step        = state%step  +1
-  !write(*,*) 'sub ETD2: step done.'
+  write(*,*) 'ETD step done.'
 end subroutine
 
 end module
