@@ -20,14 +20,15 @@ function fu(u_f,temp_f,chem_f,t)
   real(kind = rp)                                  ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
 
+  call set_ik_bar(t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
-  fu = fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
+  !fu = fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
   !F =       LIN        +   NONLIN
 
-  !fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
-  !fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
-  !fu = fu + fu_shear(u_f,t)               !SHEAR
+  fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
+  fu = fu + fu_diff(u_f,t)                !DIFFUSION
+  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu = fu + fu_shear(u_f,t)               !SHEAR
 
   fu(:,:,1) = dealiase_field(fu(:,:,1))
   fu(:,:,2) = dealiase_field(fu(:,:,2))
@@ -40,6 +41,7 @@ function fu_L(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp)                                  ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
+  call set_ik_bar(t)
 
   fu_L = cmplx(0.0_rp,0.0_rp,rp)
   fu_L = fu_L + fu_diff(u_f,t)                !DIFFUSION
@@ -56,6 +58,7 @@ function fu_N(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
+  call set_ik_bar(t)
   IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
     write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array u_f'
   end if
@@ -65,12 +68,17 @@ function fu_N(u_f,temp_f,chem_f,t)
   IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
     write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
   end if
+
   fu_N = cmplx(0.0_rp,0.0_rp,rp)
-  fu_N = fu_N + fu_Nuk(u_f,t)                !Nonlinear part
+  fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
   fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
-  fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
+  if(shearing==1) then
+    fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
+  end if
+
   fu_N(:,:,1) = dealiase_field(fu_N(:,:,1))
   fu_N(:,:,2) = dealiase_field(fu_N(:,:,2))
+
   IF(ALL((real(fu_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: fu_N does not contribute to pdgl!'
 end function 
 !----------------------------------------
@@ -86,7 +94,6 @@ function fu_shear(u_f,t)
           if (.NOT.(i==0.AND.j==0)) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
-
              fu_shear(i,j,1) = fu_shear(i,j,1)+((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = fu_shear(i,j,2)+((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
@@ -104,10 +111,11 @@ function fu_diff(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in)          :: u_f
   real(kind = rp)                                           ,intent(in) :: t
   integer                                                               :: dir
+  call set_ik_bar(t)
   do dir = 1,2
      !           old k-vectors
      !fu_diff(:,:,dir) = D_visc*( state%iki_sqr%val(:,:))*u_f(:,:,dir)
-     fu_diff(:,:,dir) = D_visc*( state%iki_bar_sqr%val(:,:))*u_f(:,:,dir)
+     fu_diff(:,:,dir) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,dir)
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
   end do
 end function
@@ -123,33 +131,19 @@ function fu_buo(u_f,temp_f,chem_f,t)
   do i=0,xdim-1
     do j=0,ydim-1
         if (.NOT.(i==0.AND.j==0)) then
-
-!           old k-vectors
-!          fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
-!              (-state%ikx%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
-!          fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
-!              (-state%iky%val(i,j)*state%iky%val(i,j)*temp_f(i,j))/state%iki_sqr%val(i,j)
-!          fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
-!
-!
-!          fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
-!              (-state%ikx%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
-!          fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*&
-!              (-state%iky%val(i,j)*state%iky%val(i,j)*chem_f(i,j))/state%iki_sqr%val(i,j)
-!          fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
-
+          !TEMPERATURE PART
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
               (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
               (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
-
+          !CHEMICAL PART
           fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
               (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*&
               (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
-
+          !note the minus signs within ik- variables
         end if
     end do
   end do
@@ -161,6 +155,8 @@ function fu_Nuk(u_f,t)
   real(kind = rp)                                  ,intent(in) :: t
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_Nuk
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: Nuk_f
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: omega
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: omega_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: Nuk 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: div_Nuk_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u
@@ -173,24 +169,23 @@ function fu_Nuk(u_f,t)
   k_vec(:,:,1) = state%ikx_bar%val(:,:)
   k_vec(:,:,2) = state%iky_bar%val(:,:)
   !do crossproduct
-  Nuk_f = crossp(k_vec,u_f)
+  omega_f = crossp(k_vec,u_f)
+  !IF(ANY(IsNaN(real(Nuk_f))))  then
+  !  write(*,*) 'func fu_Nuk(): NAN detected after crossp of nabla x u'
+  !  stop
+  !end if
 
-  IF(ANY(IsNaN(real(Nuk_f))))  then
-    write(*,*) 'func fu_Nuk(): NAN detected after crossp of nabla x u'
-    stop
-  end if
-
-  call transform(Nuk_f(:,:,1),Nuk(:,:,1),-1,shearing,state%t)
-  call transform(Nuk_f(:,:,2),Nuk(:,:,2),-1,shearing,state%t)
+  call transform(omega_f(:,:,1),omega(:,:,1),-1,shearing,state%t)
+  call transform(omega_f(:,:,2),omega(:,:,2),-1,shearing,state%t)
   call transform(u_f(:,:,1),u(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),u(:,:,2),-1,shearing,state%t)
 
   !do crossproduct
-  Nuk = crossp(Nuk,u)
-  IF(ANY(IsNaN(real(Nuk))))  then
-    write(*,*) 'func fu_Nuk(): NAN detected in Nuk after crossp in realspace'
-    stop
-  end if
+  Nuk = -crossp(omega,u)
+  !IF(ANY(IsNaN(real(Nuk))))  then
+  !  write(*,*) 'func fu_Nuk(): NAN detected in Nuk after crossp in realspace'
+  !  stop
+  !end if
 
   call transform(Nuk(:,:,1),Nuk_f(:,:,1),1,shearing,state%t)
   call transform(Nuk(:,:,2),Nuk_f(:,:,2),1,shearing,state%t)
@@ -202,15 +197,14 @@ function fu_Nuk(u_f,t)
  div_Nuk_f = (state%ikx_bar%val(:,:)*Nuk_f(:,:,1) &
              +state%iky_bar%val(:,:)*Nuk_f(:,:,2) )
 
-  IF(ANY(IsNaN(real(Nuk_f))))  then
-    write(*,*) 'func fu_Nuk(): NAN detected before k mult '
-    !stop
-  end if
+  !IF(ANY(IsNaN(real(Nuk_f))))  then
+  !  write(*,*) 'func fu_Nuk(): NAN detected before k mult '
+  !  !stop
+  !end if
 
   do i=0,xdim-1 
     do j=0,ydim-1 
         if (.NOT.(i==0.AND.j==0)) then
-      
         !IF(ANY(IsNaN(real(fu_Nuk(i,j,1)))))  then
         !  write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j,1
         !  stop
@@ -221,9 +215,10 @@ function fu_Nuk(u_f,t)
         !  stop
         !end if 
         IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
-          fu_Nuk(i,j,1) =-Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+
+          fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
                             *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-          fu_Nuk(i,j,2) =-Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+          fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
                             *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
         else
           write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
@@ -234,10 +229,10 @@ function fu_Nuk(u_f,t)
   end do
 
 
-  IF(ANY(IsNaN(real(fu_Nuk))))  then
-    write(*,*) 'func fu_Nuk(): NAN detected in output array'
-    stop
-  end if
+  !IF(ANY(IsNaN(real(fu_Nuk))))  then
+  !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
+  !  stop
+  !end if
 end function
 !---------------------------F_temp------------------------------------------------------------
 function ft(u_f,temp_f,t)
@@ -247,10 +242,11 @@ function ft(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   real(kind = rp),intent(in)                                   :: t
-  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-    write(*,*) 'func ft(): NAN detected in input array'
-    stop
-  end if
+  call set_ik_bar(t)
+  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+  !  write(*,*) 'func ft(): NAN detected in input array'
+  !  stop
+  !end if
   ft = cmplx(0.0,0.0,rp)
   ft = ft + ft_L(temp_f,t) + ft_N(u_f,temp_f,t)  
   ! F =           LIN       +     NONLIN
@@ -267,6 +263,7 @@ function ft_L(temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_L
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   real(kind = rp),intent(in)                                   :: t
+  call set_ik_bar(t)
   ft_L = cmplx(0.0,0.0,rp)
   ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
   ft_L = dealiase_field(ft_L)
@@ -279,16 +276,17 @@ function ft_N(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   real(kind = rp),intent(in)                                   :: t
+  call set_ik_bar(t)
   !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
   !  write(*,*) 'func ft_N():  WARNING: ALL ZEROES detected in input array u_f'
   !end if
   !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
   !  write(*,*) 'func ft_N(): WARNING: ALL ZEROES detected in input array temp_f'
   !end if
-  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-    write(*,*) 'func ft_N(): NAN detected in input array'
-    stop
-  end if
+  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+  !  write(*,*) 'func ft_N(): NAN detected in input array'
+  !  stop
+  !end if
   ft_N = cmplx(0.0,0.0,rp)
   ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
   ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
@@ -303,10 +301,10 @@ function ft_adv(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-    write(*,*) 'func ft_adv(): NAN detected in input array'
-    stop
-  end if
+  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
+  !  write(*,*) 'func ft_adv(): NAN detected in input array'
+  !  stop
+  !end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
@@ -361,6 +359,7 @@ function fc(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                            :: t
+  call set_ik_bar(t)
   fc = cmplx(0.0,0.0,rp)
   fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
   fc = fc + fc_diff(chem_f)           !DIFFUSION
@@ -378,6 +377,7 @@ function fc_L(chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_L
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
   real(kind = rp),intent(in)                                   :: t
+  call set_ik_bar(t)
   !IF(ANY(IsNaN(real(chem_f))))  then
   !  write(*,*) 'func fc_L(): NAN detected in input array'
   !  stop
@@ -394,16 +394,17 @@ function fc_N(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   real(kind = rp),intent(in)                                   :: t
+  call set_ik_bar(t)
   !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
   !  write(*,*) 'func fc_N(): WARNING: ALL ZEROES detected in input array u_f'
   !end if
   !IF(ALL((real(chem_f,rp).EQ.0.0_rp)))  then
   !  write(*,*) 'func fc_N(): WARNING ALL ZEROES detected in input array chem_f'
   !end if
-  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-    write(*,*) 'func fc_N(): NAN detected in input array'
-    stop
-  end if
+  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+  !  write(*,*) 'func fc_N(): NAN detected in input array'
+  !  stop
+  !end if
   fc_N = cmplx(0.0,0.0,rp)
   fc_N = fc_N + fc_adv(u_f,chem_f,t)  !ADVECTION
   fc_N = fc_N + fc_strat(u_f,chem_f)  !BACKGROUND stratification
@@ -418,10 +419,10 @@ function fc_adv(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
-    write(*,*) 'func fc_adv(): NAN detected in input array'
-    stop
-  end if
+  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
+  !  write(*,*) 'func fc_adv(): NAN detected in input array'
+  !  stop
+  !end if
 
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)

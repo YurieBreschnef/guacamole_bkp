@@ -218,6 +218,7 @@ module IO_mod
     integer                             :: io_error = 0
     real(kind = real_outp_precision)    :: out_x,out_y,out_z
 		character(len=1024) 		  					:: filename
+    type(sfield)                        :: dummy
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/u_f/'
 		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".u_f.dat"
@@ -225,13 +226,13 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
+    dummy%val = sqrt((state%u_f%val(:,:,1)**2 + state%u_f%val(:,:,2)**2))
+    dummy = rearrange_2Dspectrum(deal_mask(dummy))
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-          out_x = abs(state%u_f%val(i,j,1))
-          out_y = abs(state%u_f%val(i,j,2))
-	  			write(20,*) i,j,sqrt(out_x**2 + out_y**2)
+	  			write(20,*) i,j,real(dummy%val(i,j),real_outp_precision)
 			end do
 		end do
     close(20)

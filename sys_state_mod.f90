@@ -167,18 +167,20 @@ contains
 
     if(shearing ==1) then
       state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-      state%iky_bar%val(:,:) = state%iky%val(:,:) - shear*ktime*state%ikx%val(:,:)
+      state%iky_bar%val(:,:) = state%iky%val(:,:)-shear*ktime*state%ikx%val(:,:)
+
       state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
       state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
-    else
+      else
+
       state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-      state%iky_bar%val(:,:) = state%iky%val(:,:) 
+      state%iky_bar%val(:,:) = state%iky%val(:,:)
+
       state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
       state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
-
   end subroutine
 
 end module

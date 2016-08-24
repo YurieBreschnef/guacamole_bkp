@@ -127,17 +127,23 @@ module init
     !initialize velocity field 
     if(debuglevel .GE. 1) write(*,*) '  -calling init_u()'
     state%u%val = cmplx(0.0_rp,0.0_rp,rp)
-
-
     xmodes = 2 !xdim/2
     ymodes = 2 !ydim/16 
 
-    do i=0,xdim-1
-      do j=0,ydim-1
-        state%u%val(i,j,1) = sin(real(xmodes) * (real(j)/real(ydim))*2.0_rp*pi)
-        state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
-      end do
-    end do
+    ! source in the middle of the field
+    !do i=0,xdim-1
+    !  do j=0,ydim-1
+    !    state%u%val(i,j,1) = real(i-xdim/2)/abs(real(i-xdim/2))* exp(-(abs(real((i-xdim/2)**2+(j-ydim/2)**2)))) 
+    !    state%u%val(i,j,2) = real(j-ydim/2)/abs(real(j-ydim/2))* exp(-(abs(real((i-xdim/2)**2+(j-ydim/2)**2)))) 
+    !  end do
+    !end do
+
+    !do i=0,xdim-1
+    !  do j=0,ydim-1
+    !    state%u%val(i,j,1) = sin(real(xmodes) * (real(j)/real(ydim))*2.0_rp*pi)
+    !    state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
+    !  end do
+    !end do
     !do i=0,xdim-1
     !  do j=0,ydim-1
     !    amp = rand()
@@ -147,7 +153,7 @@ module init
     !  end do
     !end do
 
-    state%u%val = state%u%val *0.00001_rp                             
+    state%u%val = state%u%val *0.000000001_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val = state%u_f%val/real(xdim*ydim,rp)   !FFTW NORM

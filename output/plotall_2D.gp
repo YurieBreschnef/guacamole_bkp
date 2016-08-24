@@ -1,6 +1,11 @@
 load './gnuplot-palettes-master/jet.pal'    
+
 aspect_ratio = 1
+Lx = 16
+Ly = 16 
+
 no_of_img = 299 
+
     ####################STATISTICS###############################
     set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
 
@@ -33,7 +38,6 @@ no_of_img = 299
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,2
    #set xrange [0.0:2.5]
-
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
@@ -71,9 +75,9 @@ no_of_img = 299
 
 
 do for [i=0:no_of_img] {
-    set size ratio aspect_ratio 
+#   set size ratio aspect_ratio 
 #
-#    set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
+#   set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
 #
 #  	set output './visual/temp/'.i.'.png'
 #  	set title 'temperature field'
@@ -87,20 +91,19 @@ do for [i=0:no_of_img] {
 #  	set title 'absolute magnitude  ofvelocity field'
 #      	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image
 #
-#  	set output './visual/u_f/'.i.'.png'
-#   unset size
-#   set title 'absolute of fourier spectrum'
-#      	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3  with image
+ 	set output './visual/u_f/'.i.'.png'
+  set title 'absolute of fourier spectrum'
+ 	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3  with image
 #
 #    set output './visual/chem/'.i.'.png'
 #    set size ratio aspect_ratio 
 #  	set title 'chemical field'
 #      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image
-#
-#	set output './visual/buo/'.i.'.png'
-#	set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
-#   	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
-#
+
+	set output './visual/buo/'.i.'.png'
+	set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
+ 	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
+
     #MULTIPLOT FOR DIVERGENCE
 
     set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
@@ -115,10 +118,17 @@ do for [i=0:no_of_img] {
 
     # Multiplot for better visibility:-----------------------------------
     
-    set terminal pngcairo size 1600,800 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
     set output './visual/combo/'.i.'.png'
 
 		set multiplot layout 2,4
+    # Axes
+    set style line 11 lc rgb '#808080' lt 1
+    set border 3 back ls 11
+    set tics nomirror out scale 0.75
+
+    set xrange [0:Lx]
+    set yrange [0:Ly]
 
    #set cbrange [-300.0:300.0]
 		set title 'temperature field'
@@ -140,7 +150,7 @@ do for [i=0:no_of_img] {
       	plot './data/u/'.i.'.u.dat' using 1:2:4  with image
     #unset cbrange
 
-    #set cbrange [-3.0:3.0]
+    #set cbrange [-0.05:0.05]
 		set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
      	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
     #unset cbrange
@@ -154,6 +164,11 @@ do for [i=0:no_of_img] {
 
 #		set title 'real part of div (u)'
 #      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
+
+
+    unset xrange 
+    unset yrange 
+
   	set title 'fourier spectrum of chem field'
    	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
 
