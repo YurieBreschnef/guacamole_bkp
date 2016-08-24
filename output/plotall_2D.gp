@@ -1,8 +1,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 16
-Ly = 16 
+Lx = 32 
+Ly = 32  
 
 no_of_img = 299 
 
