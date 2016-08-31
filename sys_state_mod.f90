@@ -75,7 +75,7 @@ contains
     Ekin = 0.0_rp
     do i=0,xdim-1
     do j=0,ydim-1
-      Ekin = Ekin+(real(state%u%val(i,j,1))**2 &
+      Ekin = Ekin+0.5_rp*(real(state%u%val(i,j,1))**2 &
                   +real(state%u%val(i,j,2))**2)
     end do
     end do
@@ -105,7 +105,7 @@ contains
     Epot= 0.0_rp
     do i=0,xdim-1
     do j=0,ydim-1
-      Epot= Epot+( B_therm*state%temp%val(i,j) - B_comp*state%chem%val(i,j))*real(j)/real(ydim)*Ly
+      Epot= Epot+abs(real((B_therm*state%temp%val(i,j) - B_comp*state%chem%val(i,j)),rp))
     end do
     end do
     measure_Epot = real(Epot,real_outp_precision)/real(xdim*ydim,real_outp_precision)

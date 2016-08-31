@@ -36,7 +36,6 @@ subroutine RK4_step()
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   call dealiase_all()
   !_____________________k1_________________________________
-  
   call set_ik_bar(state%t) 
 	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
 	state%t_k1%val = ft(state%u_f%val ,state%temp_f%val ,state%t)     
@@ -103,9 +102,14 @@ subroutine euler_step()
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   call dealiase_all()
   call set_ik_bar(state%t) 
-	state%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
-	state%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
-	state%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,state%t)     
+	state_np1%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
+	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
+	state_np1%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,state%t)     
+
+  state%u_f%val = state_np1%u_f%val
+  state%temp_f%val = state_np1%temp_f%val
+  state%chem_f%val = state_np1%chem_f%val
+
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine
@@ -159,18 +163,15 @@ subroutine ETD2_step()
   u_RHS_n   = fu_N(state%u_f%val,state%temp_f%val,state%chem_f%val,state%t)
   t_RHS_n   = ft_N(state%u_f%val,state%temp_f%val                 ,state%t)
   c_RHS_n   = fc_N(state%u_f%val                 ,state%chem_f%val,state%t)
-
   ! set q-values for exponent, note the minus sign in iki_sqr
   u_q(:,:,1) = D_visc  *state%iki_bar_sqr%val(:,:)
   u_q(:,:,2) = D_visc  *state%iki_bar_sqr%val(:,:)
   t_q = D_therm *state%iki_bar_sqr%val
   c_q = D_comp  *state%iki_bar_sqr%val
-
   ! calc exponentials for multiplication
   u_exp_qh = exp(u_q*dt)
   t_exp_qh = exp(t_q*dt)
   c_exp_qh = exp(c_q*dt)
-
   ! set factors to zero (especially the (0,0) index to prevent NAN by division)
   u_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)
   u_RHS_n_factor  = cmplx(0.0_rp,0.0_rp,rp)

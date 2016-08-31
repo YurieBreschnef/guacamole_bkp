@@ -78,9 +78,9 @@ program guacamole
 
     !call RK4_adjust_dt()
 
-    call RK4_step()
+    !call RK4_step()
+    call euler_step()
     !call div_tester()
-    !call euler_step()
     !call ETD2_step()
 
     !state%step = state%step+1

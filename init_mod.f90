@@ -2,6 +2,7 @@ module init
   !module for all actions to be happening at program start
   use sys_state
 	use const
+  !use test
 	use plans
 	use trafo 
   implicit none
@@ -169,22 +170,22 @@ module init
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-   ! xpoints = 8 
-   ! ypoints = 8
-   ! do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
-   !   do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
-   !   amp = rand()
+    xpoints = 4 
+    ypoints = 4
+    do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+      do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
+      amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
-             ! state%temp%val(i,j) = state%temp%val(i,j) &
-             ! +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-             !              +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-              amp = (rand()-0.5_rp)
-              state%temp%val(i,j) = amp
+              state%temp%val(i,j) = state%temp%val(i,j) &
+              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+             ! amp = (rand()-0.5_rp)
+             ! state%temp%val(i,j) = amp
           end do
         end do
-   !   end do
-   ! end do
+      end do
+    end do
     state%temp%val = state%temp%val*0.05_rp
 
     !call s_trafo(state%temp,state%temp_f,0)
@@ -201,24 +202,24 @@ module init
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    !xpoints = 8 
-    !ypoints = 8
-    !do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
-    !  do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
-    !  amp = (rand())
+    xpoints = 4 
+    ypoints = 4
+    do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+      do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
+      amp = (rand())
         do i=0,xdim-1
           do j=0,ydim-1
-              !state%chem%val(i,j) = state%chem%val(i,j) &
-              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              state%chem%val(i,j) = state%chem%val(i,j) &
+              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
-              amp = (rand()-0.5_rp)
-              state%chem%val(i,j) = amp
+              !amp = (rand()-0.5_rp)
+              !state%chem%val(i,j) = amp
           end do
         end do
-    !  end do
-    !end do
-    state%chem%val = state%chem%val * 0.05
+      end do
+    end do
+    state%chem%val = state%chem%val * 0.05_rp
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM

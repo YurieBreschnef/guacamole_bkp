@@ -112,12 +112,11 @@ function fu_diff(u_f,t)
   real(kind = rp)                                           ,intent(in) :: t
   integer                                                               :: dir
   call set_ik_bar(t)
-  do dir = 1,2
-     !           old k-vectors
-     !fu_diff(:,:,dir) = D_visc*( state%iki_sqr%val(:,:))*u_f(:,:,dir)
-     fu_diff(:,:,dir) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,dir)
-  !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-  end do
+  !fu_diff(:,:,1) = D_visc*(state%ikx_bar_sqr%val(:,:))*u_f(:,:,1)
+  !fu_diff(:,:,2) = D_visc*(state%iky_bar_sqr%val(:,:))*u_f(:,:,2)
+  fu_diff(:,:,1) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,1)
+  fu_diff(:,:,2) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,2)
+  !note minus sign intrinsic in (i*k)**2
 end function
 !----------------------------------------
 function fu_buo(u_f,temp_f,chem_f,t)
@@ -133,15 +132,17 @@ function fu_buo(u_f,temp_f,chem_f,t)
         if (.NOT.(i==0.AND.j==0)) then
           !TEMPERATURE PART
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
-              (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
+              (-state%ikx_bar%val(i,j)*(state%iky_bar%val(i,j)*temp_f(i,j)))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*&
-              (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*temp_f(i,j))/state%iki_bar_sqr%val(i,j)
+              (-state%iky_bar%val(i,j)*(state%iky_bar%val(i,j)*temp_f(i,j)))/state%iki_bar_sqr%val(i,j)
+
           fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
           !CHEMICAL PART
           fu_buo(i,j,1) =fu_buo(i,j,1)-B_comp*&
-              (-state%ikx_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
+              (-state%ikx_bar%val(i,j)*(state%iky_bar%val(i,j)*chem_f(i,j)))/state%iki_bar_sqr%val(i,j)
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*&
-              (-state%iky_bar%val(i,j)*state%iky_bar%val(i,j)*chem_f(i,j))/state%iki_bar_sqr%val(i,j)
+              (-state%iky_bar%val(i,j)*(state%iky_bar%val(i,j)*chem_f(i,j)))/state%iki_bar_sqr%val(i,j)
+
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
           !note the minus signs within ik- variables
         end if
@@ -166,10 +167,12 @@ function fu_Nuk(u_f,t)
     stop
   end if
   call set_ik_bar(t)
+
   k_vec(:,:,1) = state%ikx_bar%val(:,:)
   k_vec(:,:,2) = state%iky_bar%val(:,:)
   !do crossproduct
   omega_f = crossp(k_vec,u_f)
+
   !IF(ANY(IsNaN(real(Nuk_f))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected after crossp of nabla x u'
   !  stop
@@ -209,17 +212,16 @@ function fu_Nuk(u_f,t)
         !  write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j,1
         !  stop
         !end if
-
         !if(state%iki_bar_sqr%val(i,j).EQ.cmplx(0.0_rp,0.0_rp)) then
         !  write(*,*) 'func fu_Nuk(): zero in k-vec NAN imminent at pos (bef):',i,j
         !  stop
         !end if 
         IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
-
           fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
                             *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
           fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
                             *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+          !note minus sign resulting from i factor in ikx,iky..
         else
           write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
           stop
@@ -247,10 +249,10 @@ function ft(u_f,temp_f,t)
   !  write(*,*) 'func ft(): NAN detected in input array'
   !  stop
   !end if
+
   ft = cmplx(0.0,0.0,rp)
   ft = ft + ft_L(temp_f,t) + ft_N(u_f,temp_f,t)  
   ! F =           LIN       +     NONLIN
-
   !ft = ft + ft_adv(u_f,temp_f,t)  !ADVECTION
   !ft = ft + ft_diff(temp_f)       !DIFFUSION
   !ft = ft + ft_strat(u_f,temp_f)  !BACKGROUND stratification
@@ -289,7 +291,7 @@ function ft_N(u_f,temp_f,t)
   !end if
   ft_N = cmplx(0.0,0.0,rp)
   ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
-  ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  !ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
   ft_N = dealiase_field(ft_N)
   IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
 end function 
@@ -363,7 +365,7 @@ function fc(u_f,chem_f,t)
   fc = cmplx(0.0,0.0,rp)
   fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
   fc = fc + fc_diff(chem_f)           !DIFFUSION
-  fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
+  !fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
   fc = dealiase_field(fc)
   !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func fc(): all output values are zero! '
