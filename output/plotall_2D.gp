@@ -1,8 +1,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 32 
-Ly = 32  
+Lx = 64 
+Ly = 64  
 
 no_of_img = 299 
 
@@ -165,12 +165,18 @@ do for [i=0:no_of_img] {
 #		set title 'real part of div (u)'
 #      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
 
-
     unset xrange 
     unset yrange 
 
   	set title 'fourier spectrum of chem field'
    	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
+    #unset parametric
+    #set mapping cartesian
+    #set view 60,30,1,1
+    #set auto
+    #set isosamples 60
+    #set hidden3d
+   	#splot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
 
 		unset multiplot
 
