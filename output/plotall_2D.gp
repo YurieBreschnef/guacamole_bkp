@@ -1,8 +1,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 64 
-Ly = 64  
+Lx = 200 
+Ly = 200  
 
 no_of_img = 299 
 
@@ -70,14 +70,19 @@ no_of_img = 299
         plot './data/sys_stat/sys_stat.dat' using 2:4 title "shear strength [arb]"
         set title 'simulation time vs. stepwidth dt [arb] '
         plot './data/sys_stat/sys_stat.dat' using 2:5 title "dt [arb]"
+
+        #set title 'simulation time vs. average vorticity [arb] '
+        #plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
     unset multiplot
     ##########################################################################
 
 
 do for [i=0:no_of_img] {
-#   set size ratio aspect_ratio 
-#
-#   set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
+    set xrange [0:Lx]
+    set yrange [0:Ly]
+    set size ratio aspect_ratio 
+
+   set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
 #
 #  	set output './visual/temp/'.i.'.png'
 #  	set title 'temperature field'
@@ -96,7 +101,6 @@ do for [i=0:no_of_img] {
  	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3  with image
 #
 #    set output './visual/chem/'.i.'.png'
-#    set size ratio aspect_ratio 
 #  	set title 'chemical field'
 #      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image
 
@@ -118,6 +122,7 @@ do for [i=0:no_of_img] {
 
     # Multiplot for better visibility:-----------------------------------
     
+    set size ratio aspect_ratio 
     set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
     set output './visual/combo/'.i.'.png'
 

@@ -177,11 +177,12 @@ module init
       amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
-              state%temp%val(i,j) = state%temp%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-             ! amp = (rand()-0.5_rp)
-             ! state%temp%val(i,j) = amp
+              !state%temp%val(i,j) = state%temp%val(i,j) &
+              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+
+              amp = (rand()-0.5_rp)
+              state%temp%val(i,j) = amp
           end do
         end do
       end do
@@ -190,6 +191,7 @@ module init
 
     !call s_trafo(state%temp,state%temp_f,0)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
+    state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = state%temp_f%val/real(xdim*ydim,rp)   !FFTW NORM
     if(debuglevel .GE. 1) write(*,*) '  -done with init_temp.'
   end subroutine
@@ -209,12 +211,12 @@ module init
       amp = (rand())
         do i=0,xdim-1
           do j=0,ydim-1
-              state%chem%val(i,j) = state%chem%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
-
-              !amp = (rand()-0.5_rp)
-              !state%chem%val(i,j) = amp
+!              state%chem%val(i,j) = state%chem%val(i,j) &
+!              +cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+!                           +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+!
+              amp = (rand()-0.5_rp)
+              state%chem%val(i,j) = amp
           end do
         end do
       end do
@@ -223,6 +225,7 @@ module init
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM
+    state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
     if(debuglevel .GE. 1) write(*,*) '  -done with init_chem.'
   end subroutine
 

@@ -111,30 +111,18 @@ contains
     measure_Epot = real(Epot,real_outp_precision)/real(xdim*ydim,real_outp_precision)
   end function
 
-  function measure_av_temp()
-    !measures a relative value for temp  within system.
-    real(kind=real_outp_precision)            ::measure_av_temp
-    real(kind=rp)                             ::tmp
+  function measure_av(input)
+    !measures a relative average value for input sfield .
+  	complex(kind=rp),dimension(0:xdim-1,0:ydim-1) :: input
+    real(kind=real_outp_precision)                ::measure_av
+    real(kind=rp)                                 ::tmp
     tmp= 0.0_rp
     do i=0,xdim-1
     do j=0,ydim-1
-      tmp= tmp+(state%temp%val(i,j)) 
+      tmp= tmp+(input(i,j)) 
     end do
     end do
-    measure_av_temp= real(tmp,real_outp_precision)/real(xdim*ydim,real_outp_precision)
-  end function
-
-  function measure_av_chem()
-    !measures a relative value for temp  within system.
-    real(kind=real_outp_precision)            ::measure_av_chem
-    real(kind=rp)                             ::chem
-    chem= 0.0_rp
-    do i=0,xdim-1
-    do j=0,ydim-1
-      chem= chem+(state%chem%val(i,j)) 
-    end do
-    end do
-    measure_av_chem= real(chem,real_outp_precision)/real(xdim*ydim,real_outp_precision)
+    measure_av= real(tmp,real_outp_precision)/real(xdim*ydim,real_outp_precision)
   end function
 
   function measure_u_rms()

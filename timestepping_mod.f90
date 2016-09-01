@@ -106,6 +106,17 @@ subroutine euler_step()
 	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
 	state_np1%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,state%t)     
 
+
+  ! shear the rhs of timestepping one step back (?)
+!  do i =0,xdim-1
+!    do j =0,ydim-1
+!      state_np1%u_f%val(i,j,1)  = state_np1%u_f%val(i,j,1)  *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+!      state_np1%u_f%val(i,j,2)  = state_np1%u_f%val(i,j,2)  *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+!      state_np1%temp_f%val(i,j) = state_np1%temp_f%val(i,j) *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly) 
+!      state_np1%chem_f%val(i,j) = state_np1%chem_f%val(i,j) *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+!    end do
+!  end do
+
   state%u_f%val = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val

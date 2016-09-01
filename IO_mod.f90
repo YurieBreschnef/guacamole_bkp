@@ -365,7 +365,9 @@ module IO_mod
                   maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
                   shear,                                                    & !4 strength of shear
                   dt,                                                       & !5
-                  maxval(real(int1_dummy%val,real_outp_precision))            !6 max brucker div 
+                  maxval(real(int1_dummy%val,real_outp_precision)),         & !6 max brucker div 
+                  measure_av(state%s_dummy_f%val)                             !7 average vorticity 
+
       close(20)
     end if
   end subroutine
@@ -386,7 +388,7 @@ module IO_mod
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_T_stat!'
-	 	  write(20,*) state%step,state%t,maxval(real(state%temp%val,real_outp_precision)),measure_av_temp()&
+	 	  write(20,*) state%step,state%t,maxval(real(state%temp%val,real_outp_precision)),measure_av(state%temp%val)&
                    ,minval(real(state%chem%val,real_outp_precision))
       close(20)
     end if
@@ -407,7 +409,7 @@ module IO_mod
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_C_stat!'
-	 	  write(20,*) state%step,state%t,maxval(real(state%chem%val,real_outp_precision)),measure_av_chem()&
+	 	  write(20,*) state%step,state%t,maxval(real(state%chem%val,real_outp_precision)),measure_av(state%chem%val)&
                    ,minval(real(state%chem%val,real_outp_precision))
       close(20)
     end if

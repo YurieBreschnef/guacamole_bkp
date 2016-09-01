@@ -19,12 +19,8 @@ function fu(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
-
   call set_ik_bar(t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
-  !fu = fu_L(u_f,t) + fu_N(u_f,temp_f,chem_f,t)
-  !F =       LIN        +   NONLIN
-
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
   fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
@@ -42,10 +38,8 @@ function fu_L(u_f,t)
   real(kind = rp)                                  ,intent(in) :: t
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
   call set_ik_bar(t)
-
   fu_L = cmplx(0.0_rp,0.0_rp,rp)
   fu_L = fu_L + fu_diff(u_f,t)                !DIFFUSION
-
   fu_L(:,:,1) = dealiase_field(fu_L(:,:,1))
   fu_L(:,:,2) = dealiase_field(fu_L(:,:,2))
 end function 
@@ -58,7 +52,6 @@ function fu_N(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
-  call set_ik_bar(t)
   IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
     write(*,*) 'func fu_N():WARNING:  all zeroes detected in input array u_f'
   end if
@@ -69,6 +62,7 @@ function fu_N(u_f,temp_f,chem_f,t)
     write(*,*) 'func fu_N():WARNING: all zeroes detected in input array temp_f'
   end if
 
+  call set_ik_bar(t)
   fu_N = cmplx(0.0_rp,0.0_rp,rp)
   fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
   fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
@@ -94,9 +88,13 @@ function fu_shear(u_f,t)
           if (.NOT.(i==0.AND.j==0)) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
-             fu_shear(i,j,1) = fu_shear(i,j,1)+((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             !fu_shear(i,j,1) = fu_shear(i,j,1)+((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             !                             /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
+             !fu_shear(i,j,2) = fu_shear(i,j,2)+((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             !                             /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
+             fu_shear(i,j,1) = fu_shear(i,j,1)+2.0_rp*((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
-             fu_shear(i,j,2) = fu_shear(i,j,2)+((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
           end if
@@ -112,8 +110,6 @@ function fu_diff(u_f,t)
   real(kind = rp)                                           ,intent(in) :: t
   integer                                                               :: dir
   call set_ik_bar(t)
-  !fu_diff(:,:,1) = D_visc*(state%ikx_bar_sqr%val(:,:))*u_f(:,:,1)
-  !fu_diff(:,:,2) = D_visc*(state%iky_bar_sqr%val(:,:))*u_f(:,:,2)
   fu_diff(:,:,1) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,1)
   fu_diff(:,:,2) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,2)
   !note minus sign intrinsic in (i*k)**2
@@ -168,11 +164,10 @@ function fu_Nuk(u_f,t)
   end if
   call set_ik_bar(t)
 
-  k_vec(:,:,1) = state%ikx_bar%val(:,:)
-  k_vec(:,:,2) = state%iky_bar%val(:,:)
+  k_vec(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
+  k_vec(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
   !do crossproduct
   omega_f = crossp(k_vec,u_f)
-
   !IF(ANY(IsNaN(real(Nuk_f))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected after crossp of nabla x u'
   !  stop
@@ -291,7 +286,7 @@ function ft_N(u_f,temp_f,t)
   !end if
   ft_N = cmplx(0.0,0.0,rp)
   ft_N = ft_N + ft_adv(u_f,temp_f,t)  !ADVECTION
-  !ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  ft_N = ft_N + ft_strat(u_f,temp_f)  !BACKGROUND stratification
   ft_N = dealiase_field(ft_N)
   IF(ALL((real(ft_N,rp).EQ.0.0_rp)))write(*,*) 'WARNING: ft_N does not contribute to pdgl!'
 end function 
@@ -311,9 +306,6 @@ function ft_adv(u_f,temp_f,t)
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
   call transform(temp_f,state%s_dummy%val,-1,shearing,state%t)
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,1) ,state%dummy%val(:,:,1))
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,2) ,state%dummy%val(:,:,2))
-  !call dfftw_execute_dft(ifull2D,temp_f(:,:),state%s_dummy%val(:,:))
 
   !                                   temp       *        u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
@@ -322,12 +314,7 @@ function ft_adv(u_f,temp_f,t)
   !now trafo temp*u back to fourier space
   call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,state%t)
   call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,state%t)
-  !call dfftw_execute_dft(full2D,state%dummy%val(:,:,1),state%dummy_f%val(:,:,1))
-  !call dfftw_execute_dft(full2D,state%dummy%val(:,:,2),state%dummy_f%val(:,:,2))
-  !state%dummy_f%val = state%dummy_f%val/real(xdim*ydim,rp) !FFTW NORM
 ! advection 
- !ft_adv(:,:) =-(   state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
- !                 +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
  ft_adv(:,:) =-(   state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
                   +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
 end function
@@ -365,7 +352,7 @@ function fc(u_f,chem_f,t)
   fc = cmplx(0.0,0.0,rp)
   fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
   fc = fc + fc_diff(chem_f)           !DIFFUSION
-  !fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
+  fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
   fc = dealiase_field(fc)
   !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func fc(): all output values are zero! '
@@ -429,9 +416,6 @@ function fc_adv(u_f,chem_f,t)
   call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
   call transform(chem_f,state%s_dummy%val,-1,shearing,state%t)
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,1) ,state%dummy%val(:,:,1))
-  !call dfftw_execute_dft(ifull2D,u_f(:,:,2) ,state%dummy%val(:,:,2))
-  !call dfftw_execute_dft(ifull2D,chem_f(:,:),state%s_dummy%val(:,:))
 
   !                                             chem* u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
@@ -440,13 +424,8 @@ function fc_adv(u_f,chem_f,t)
   !now trafo chem*u back to fourier space
   call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,state%t)
   call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,state%t)
-  !call dfftw_execute_dft(full2D,state%dummy%val(:,:,1),state%dummy_f%val(:,:,1))
-  !call dfftw_execute_dft(full2D,state%dummy%val(:,:,2),state%dummy_f%val(:,:,2))
-  !state%dummy_f%val = state%dummy_f%val/real(xdim*ydim,rp) !FFTW NORM
 
 ! advection 
- !fc_adv(:,:) =-( state%ikx%val(:,:) * state%dummy_f%val(:,:,1)  &  
- !               +state%iky%val(:,:) * state%dummy_f%val(:,:,2) )
  fc_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
                 +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
 end function
