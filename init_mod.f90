@@ -2,6 +2,7 @@ module init
   !module for all actions to be happening at program start
   use sys_state
 	use const
+  use timestepping
   !use test
 	use plans
 	use trafo 
@@ -44,7 +45,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-TEMP diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_therm,'|dt:',dt
@@ -54,7 +55,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_comp,'|dt:',dt
@@ -99,6 +100,39 @@ module init
     write(*,*) 'smallest possible number:', epsilon(1.0_rp)
     write(*,*) '1/eps:', 1.0/epsilon(1.0_rp)
     write(*,*) '1/eps**2:', 1.0/epsilon(1.0_rp)**2
+
+    write(*,*)'_______________________________RUNTIME ESTIMATION______________________________'
+    state_nm1 = state  
+    call RK4_step()   ! to not compare the first writing step  with the second nonwriting
+    call cpu_time(bm_timestepping_starttime)
+    call RK4_step()
+    call cpu_time(bm_timestepping_endtime)
+    call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
+    write(*,*) 'RK4 step took:', bm_timestepping_time
+    if(int(bm_step_time*real(steps))>=3600) then
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
+                            int(3600))/60,'min'
+    else
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
+            mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
+    end if
+    call cpu_time(bm_timestepping_starttime)
+    call euler_step()
+    call cpu_time(bm_timestepping_endtime)
+    call bm_evaluate(.false.)     ! measure how long one step takes and make an estimation 
+    write(*,*) '______________________________________________________'
+    write(*,*) 'EULER step took:', bm_timestepping_time
+    if(int(bm_step_time*real(steps))>=3600) then
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/3600,'hours',mod(int(bm_timestepping_time*real(steps)),&
+                            int(3600))/60,'min'
+    else
+      write(*,*)'ESTIMATED RUNTIME:', int(bm_timestepping_time*real(steps))/60,'min',&
+            mod(int(bm_timestepping_time*real(steps)),int(60)),'sec'
+    end if
+    
+    state = state_nm1       ! reset state to init
+
+    benchmarking = i
     if(debuglevel .GE. 1) write(*,*) '_________END of Plausibility___ ________________________'
   end subroutine
 
@@ -260,6 +294,18 @@ module init
     state%iky_sqr%val(:,0) = epsilon(1.0_rp)
     state%iki_sqr%val = state%ikx_sqr%val + state%iky_sqr%val 
     state%iki_sqr%val(0,0) = epsilon(1.0_rp)
+
+    ! also set iki_bar variables because if shearing is of they need to be set at least once
+    state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
+    state%iky_bar%val(:,:) = state%iky%val(:,:)
+    state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+    state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
+    state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+
+    ! used for crossprodukt in fu_Nuk in module pdgl
+    state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
+    state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
+
     write(*,*) 'epsilon:',epsilon(1.0_rp)
     write(*,*) '1/epsilon:',1.0_rp/epsilon(1.0_rp)
     write(*,*) '1/epsilon**2:',1.0_rp/(epsilon(1.0_rp)**2)

@@ -30,6 +30,7 @@ module sys_state
     type(vfield)                      :: z_dummy_f
     type(vfield)                      :: u_f
     type(vfield)                      :: u_k1,u_k2,u_k3,u_k4	
+    type(vfield)                      :: k_vec
 
     type(sfield)                      :: temp
     type(sfield)                      :: temp_f
@@ -160,14 +161,16 @@ contains
       state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
       state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+      state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
+      state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
       else
 
-      state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-      state%iky_bar%val(:,:) = state%iky%val(:,:)
+      !state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
+      !state%iky_bar%val(:,:) = state%iky%val(:,:)
 
-      state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
-      state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
-      state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
+      !state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
+      !state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
+      !state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
   end subroutine
 

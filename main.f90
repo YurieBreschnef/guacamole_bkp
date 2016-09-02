@@ -13,6 +13,7 @@ program guacamole
   use IO_mod
   use trafo
   use test
+  use benchmark
   implicit none
   if(debuglevel .GE. 1) write(*,*) '__________________START____________________________________'
 
@@ -26,28 +27,34 @@ program guacamole
 
 
   do main_stp= 0,steps
-    if(mod(state%step,(measure_every)).EQ.0) then
-      call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,state%t)
-      call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,state%t)
-      call transform(state%temp_f%val,state%temp%val,-1,shearing,state%t)
-      call transform(state%chem_f%val,state%chem%val,-1,shearing,state%t)
+    if(benchmarking ==1) call cpu_time(bm_step_starttime)
+    if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
+      if(mod(state%step,(measure_every)).EQ.0) then
+        call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,state%t)
+        call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,state%t)
+        call transform(state%temp_f%val,state%temp%val,-1,shearing,state%t)
+        call transform(state%chem_f%val,state%chem%val,-1,shearing,state%t)
 
-      !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,1),state%u%val(:,:,1))
-      !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,2),state%u%val(:,:,2))
-      !call dfftw_execute_dft(ifull2D,state%temp_f%val(:,:),state%temp%val(:,:))
-      !call dfftw_execute_dft(ifull2D,state%chem_f%val(:,:),state%chem%val(:,:))
-      call write_u_stat()
-      call write_E_stat()
-      call write_T_stat()
-      call write_C_stat()
-      call write_sys_stat()
-    end if 
+        !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,1),state%u%val(:,:,1))
+        !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,2),state%u%val(:,:,2))
+        !call dfftw_execute_dft(ifull2D,state%temp_f%val(:,:),state%temp%val(:,:))
+        !call dfftw_execute_dft(ifull2D,state%chem_f%val(:,:),state%chem%val(:,:))
+        call write_u_stat()
+        call write_E_stat()
+        call write_T_stat()
+        call write_C_stat()
+        call write_sys_stat()
+      end if 
+    if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
 
-    if(state%t > last_written) then
-      call write_all()
-      !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
-      last_written = last_written+write_intervall
-    end if 
+    if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
+      if(state%t > last_written) then
+        call write_all()
+        !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
+        last_written = last_written+write_intervall
+        if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+      end if 
+    if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
 
   	if(mod(state%step,(steps/1000)).EQ.0) then
         write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
@@ -76,16 +83,19 @@ program guacamole
     !    shear =0.10
     !end if
 
-    !call RK4_adjust_dt()
-
-    !call RK4_step()
-    call euler_step()
-    !call div_tester()
-    !call ETD2_step()
+    if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
+      !call RK4_adjust_dt()
+      !call RK4_step()
+      call euler_step()
+      !call div_tester()
+      !call ETD2_step()
+    if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
 
     !state%step = state%step+1
     !state%t = state%t+dt
     
+    if(benchmarking ==1) call cpu_time(bm_step_endtime)
+    if(benchmarking ==1) call bm_evaluate(.true.)
   end do
 
   if(debuglevel <= 1) write(*,*) '__________________END OF TIMESTEPPING______________________'

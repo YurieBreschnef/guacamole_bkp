@@ -34,7 +34,6 @@ end subroutine
 subroutine RK4_step()
 	!performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
-  call dealiase_all()
   !_____________________k1_________________________________
   call set_ik_bar(state%t) 
 	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
@@ -93,6 +92,7 @@ subroutine RK4_step()
                                                     +2.0_rp*state%c_k2%val&
                                                     +2.0_rp*state%c_k3%val&
                                                            +state%c_k4%val)
+  call dealiase_all()
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine
@@ -100,7 +100,6 @@ end subroutine
 subroutine euler_step()
 	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
-  call dealiase_all()
   call set_ik_bar(state%t) 
 	state_np1%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
 	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
@@ -120,7 +119,7 @@ subroutine euler_step()
   state%u_f%val = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
-
+  call dealiase_all()
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine

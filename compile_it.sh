@@ -5,6 +5,7 @@ echo "bash: compile"
 gfortran -I/usr/include \
 const_mod.f90 \
 sys_state_mod.f90 \
+benchmark_mod.f90 \
 plans_mod.f90 \
 trafo_mod.f90 \
 nabla_mod.f90 \

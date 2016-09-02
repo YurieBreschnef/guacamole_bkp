@@ -183,7 +183,6 @@ module IO_mod
 	    	do j=0,ydim-1
 	  			write(20,*) real(i)*(Lx/real(xdim)),real(j)*(Ly/real(ydim))&
 	  			           ,real(state%s_dummy%val(i,j),real_outp_precision)&
-                     !,real(state%c_dummy_f%val(i,j),real_outp_precision)
                      ,real(state%cz_dummy_f%val(i,j),real_outp_precision)
 			end do
 		end do
@@ -362,7 +361,9 @@ module IO_mod
 
 	 	  write(20,*) state%step,                                               & !1
                   state%t,                                                  & !2
-                  maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
+
+                  0.0_rp,&
+                  !maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
                   shear,                                                    & !4 strength of shear
                   dt,                                                       & !5
                   maxval(real(int1_dummy%val,real_outp_precision)),         & !6 max brucker div 
