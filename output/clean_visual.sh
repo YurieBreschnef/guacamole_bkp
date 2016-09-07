@@ -50,7 +50,7 @@ cd vort/
 yes | rm *.png
 cd ..
 
-cd temp_chem_combo/
+cd spec_inspect_combo/
 yes | rm *.png
 cd ..
 

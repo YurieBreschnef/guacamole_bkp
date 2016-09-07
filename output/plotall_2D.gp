@@ -1,13 +1,15 @@
+#load './gnuplot-palettes-master/spectral.pal'    
+#load './gnuplot-palettes-master/blues.pal'    
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 64 
-Ly = 64  
+Lx = 32 
+Ly = 32  
 
 no_of_img = 299 
 
     ####################STATISTICS###############################
-    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
+    set terminal pngcairo size 800,600 enhanced font 'Verdana,10'
 
     #set output './visual/stat/Energies.png'
     #set title 'simulation time [arb] vs. E_kin [arb]'
@@ -37,7 +39,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,2
-   #set xrange [0.0:2.5]
+   set xrange [0.0:4.0]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
@@ -82,11 +84,11 @@ do for [i=0:no_of_img] {
     set yrange [0:Ly]
     set size ratio aspect_ratio 
 
-   set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
+   set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
 #
 #  	set output './visual/temp/'.i.'.png'
 #  	set title 'temperature field'
-#      	plot './data/temp/'.i.'.temp.dat' using 1:2:3  with image
+#      	plot './data/temp/'.i.'.temp.dat' using 1:2:3  with image notitle
 #
 #  	set output './visual/u/'.i.'.png'
 #  	set title 'velocity field'
@@ -94,36 +96,40 @@ do for [i=0:no_of_img] {
 #
 #  	set output './visual/abs_u/'.i.'.png'
 #  	set title 'absolute magnitude  ofvelocity field'
-#      	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image
+#      	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
 #
+  unset xrange
+  unset yrange
  	set output './visual/u_f/'.i.'.png'
   set title 'absolute of fourier spectrum'
- 	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3  with image
+ 	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3  with image notitle
+  set xrange [0:Lx]
+  set yrange [0:Ly]
 #
 #    set output './visual/chem/'.i.'.png'
 #  	set title 'chemical field'
-#      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image
+#      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image notitle
 
 	set output './visual/buo/'.i.'.png'
 	set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
- 	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
+ 	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image notitle
 
     #MULTIPLOT FOR DIVERGENCE
 
-    set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
+    set terminal pngcairo size 600,400 enhanced font 'Verdana,10'
   	set output './visual/div/'.i.'.png'
 		set multiplot layout 1,2
   	set title 'real part of div (u) (real space)'
-      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
+      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image notitle
   	set title 'real part brucker divergence kbar times u'
-      	plot './data/div/'.i.'.div.dat' using 1:2:4 with image
+      	plot './data/div/'.i.'.div.dat' using 1:2:4 with image notitle
     unset multiplot
 
 
     # Multiplot for better visibility:-----------------------------------
     
     set size ratio aspect_ratio 
-    set terminal pngcairo size 1200,600 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
     set output './visual/combo/'.i.'.png'
 
 		set multiplot layout 2,4
@@ -137,68 +143,91 @@ do for [i=0:no_of_img] {
 
    #set cbrange [-300.0:300.0]
 		set title 'temperature field'
-      	plot './data/temp/'.i.'.temp.dat' using 1:2:3  with image
+      	plot './data/temp/'.i.'.temp.dat' using 1:2:3  with image notitle
     #load './gnuplot-palettes-master/Greys.pal'    
    #set cbrange [-30.0:30.0]
 		set title 'chemical field'
-      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image
+      	plot './data/chem/'.i.'.chem.dat' using 1:2:3  with image notitle
     #load './gnuplot-palettes-master/jet.pal'    
    # unset cbrange
 
     #set cbrange [-0.0:5.0]
 		set title 'absolute of u '
-     	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3  with image
+     	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3  with image notitle
     #unset cbrange
 
     #set cbrange [-0.8:0.8]
 		set title 'z component of u '
-      	plot './data/u/'.i.'.u.dat' using 1:2:4  with image
+      	plot './data/u/'.i.'.u.dat' using 1:2:4  with image notitle
     #unset cbrange
 
     #set cbrange [-0.05:0.05]
 		set title 'buoyancy field (B_therm*T_z - B_comp * S_z)'
-     	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image
+     	plot './data/buo/'.i.'.buo.dat' using 1:2:3  with image notitle
     #unset cbrange
 
 		set title 'velocity field'
      	plot './data/u/'.i.'.u.dat' using 1:2:3:4  with vectors
 
 		set title 'vorticity field'
-     	plot './data/vort/'.i.'.vort.dat' using 1:2:3  with image
+     	plot './data/vort/'.i.'.vort.dat' using 1:2:3  with image notitle
 
 
 #		set title 'real part of div (u)'
-#      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image
+#      	plot './data/div/'.i.'.div.dat' using 1:2:3 with image notitle
 
     unset xrange 
     unset yrange 
 
   	set title 'fourier spectrum of chem field'
-   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
+   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
     #unset parametric
     #set mapping cartesian
     #set view 60,30,1,1
     #set auto
     #set isosamples 60
     #set hidden3d
-   	#splot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
+   	#splot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
 
 		unset multiplot
 
-    #MULTIPLOT temp/chem--------------------------------------------------
-    set terminal pngcairo size 1024,1024 enhanced font 'Verdana,10'
-    set output './visual/temp_chem_combo/'.i.'.png'
+    #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
+    set terminal pngcairo size 1200,900 enhanced font 'Verdana,10'
+    set output './visual/spec_inspect_combo/'.i.'.png'
+  	set multiplot layout 2,3
 
-  	set multiplot layout 2,2
-
+    unset tics
+    unset colorbox
+    #unset border 
   	set title 'temperature field'
-    plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image
-  	set title 'fourier spectrum of temp field'
-   	plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image
+    plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
+  	#set title 'Real part of fourier spectrum of temp field'
+   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image notitle
+  	set title 'Imag part of fourier spectrum of temp field'
+   	plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:4  with image notitle
+  	set title 'real cutof part of fourier spectrum of temp field'
+   	plot './data/temp_f_remap/'.i.'.temp_f_remap.dat' using 1:2:4  with image notitle
+
   	set title 'chemical field'
-   	plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image
-  	set title 'fourier spectrum of chem field'
-   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image
+   	plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image notitle
+  	set title 'Real part of fourier spectrum of chem field'
+   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
+  	#set title 'Imag part of fourier spectrum of chem field'
+   	#plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:4 with image notitle
+  	set title 'real cutof part of fourier spectrum of chem  field'
+   	plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
+
+  	#set title 'absolute magnitude  of velocity field'
+   	#plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
+  	#set title 'Real part of fourier transform of u_x '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
+  	##set title 'Imag part of fourier transform of u_x '
+   	##plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
+  	#set title 'Real part of fourier transform of u_y '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
+  	##set title 'Imag part of fourier transform of u_y '
+   	##plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
+
 
   	unset multiplot
     unset size

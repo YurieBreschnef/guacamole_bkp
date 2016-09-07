@@ -34,6 +34,14 @@ cd chem_f/
 yes | rm *.dat
 cd ..
 
+cd chem_f_remap/
+yes | rm *.dat
+cd ..
+
+cd temp_f_remap/
+yes | rm *.dat
+cd ..
+
 cd vort/
 yes | rm *.dat
 cd ..

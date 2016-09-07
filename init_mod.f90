@@ -102,6 +102,8 @@ module init
     write(*,*) '1/eps**2:', 1.0/epsilon(1.0_rp)**2
 
     write(*,*)'_______________________________RUNTIME ESTIMATION______________________________'
+    l = benchmarking
+    benchmarking =1
     state_nm1 = state  
     call RK4_step()   ! to not compare the first writing step  with the second nonwriting
     call cpu_time(bm_timestepping_starttime)
@@ -132,7 +134,7 @@ module init
     
     state = state_nm1       ! reset state to init
 
-    benchmarking = i
+    benchmarking = l
     if(debuglevel .GE. 1) write(*,*) '_________END of Plausibility___ ________________________'
   end subroutine
 
@@ -204,8 +206,8 @@ module init
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 4 
-    ypoints = 4
+    xpoints = 16 
+    ypoints = 16
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = rand()
@@ -217,6 +219,21 @@ module init
 
               amp = (rand()-0.5_rp)
               state%temp%val(i,j) = amp
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+              !state%temp%val(i,j) =  state%temp%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
           end do
         end do
       end do
@@ -238,8 +255,8 @@ module init
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 4 
-    ypoints = 4
+    xpoints = 16 
+    ypoints = 16
     do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
       do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
       amp = (rand())
@@ -251,6 +268,21 @@ module init
 !
               amp = (rand()-0.5_rp)
               state%chem%val(i,j) = amp
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+
           end do
         end do
       end do

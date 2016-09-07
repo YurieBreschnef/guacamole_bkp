@@ -48,13 +48,15 @@ program guacamole
     if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
 
     if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
+    if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+
       if(state%t > last_written) then
+        if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
         call write_all()
         !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
         last_written = last_written+write_intervall
         if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
       end if 
-    if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
 
   	if(mod(state%step,(steps/1000)).EQ.0) then
         write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
@@ -90,11 +92,9 @@ program guacamole
       !call div_tester()
       !call ETD2_step()
     if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
-
-    !state%step = state%step+1
-    !state%t = state%t+dt
-    
     if(benchmarking ==1) call cpu_time(bm_step_endtime)
+
+    !BENCHMARKING------------------------------------
     if(benchmarking ==1) call bm_evaluate(.true.)
   end do
 

@@ -22,7 +22,7 @@ module trafo
     dealiase_field = arr_f
     do i=xdim/3,2*(xdim/3)
 		  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
-	  end do	
+	  end do
     do j=ydim/3,2*(ydim/3)
 		  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
 	  end do	

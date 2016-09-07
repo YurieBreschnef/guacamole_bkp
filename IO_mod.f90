@@ -2,6 +2,7 @@ module IO_mod
   use sys_state
   use plans
   use nabla
+  use trafo
   implicit none
   contains
 
@@ -19,14 +20,19 @@ module IO_mod
 
     call write_u()
     call write_abs_u()
+
     call write_chem()
     call write_temp()
     call write_buo()
+
     call write_div()
     call write_vort()
+
     call write_u_f()
     call write_chem_f()
+    call write_chem_f_remap()
     call write_temp_f()
+    call write_temp_f_remap()
 
     call write_u_stat()     ! u-relatetd measures
     call write_E_stat()     ! Energy related measures
@@ -217,7 +223,11 @@ module IO_mod
     integer                             :: io_error = 0
     real(kind = real_outp_precision)    :: out_x,out_y,out_z
 		character(len=1024) 		  					:: filename
-    type(sfield)                        :: dummy
+    type(sfield)                        :: x_r_dummy
+    type(sfield)                        :: x_i_dummy
+    type(sfield)                        :: y_r_dummy
+    type(sfield)                        :: y_i_dummy
+    type(vfield)                        :: dummy
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/u_f/'
 		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".u_f.dat"
@@ -225,13 +235,32 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
-    dummy%val = sqrt((state%u_f%val(:,:,1)**2 + state%u_f%val(:,:,2)**2))
-    dummy = rearrange_2Dspectrum(deal_mask(dummy))
+    !dummy = state%u_f
+		!do i=0,xdim-1
+	  !	do j=0,ydim-1
+	  ! 		dummy%val(i,j,1) = dummy%val(i,j,1)*exp(shear*state%t*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+	  ! 		dummy%val(i,j,2) = dummy%val(i,j,2)*exp(shear*state%t*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+    !  end do
+    !end do
+    !dummy = rearrange_2Dspectrum(deal_mask(dummy))
+    x_r_dummy%val(:,:) = real(state%u_f%val(:,:,1),real_outp_precision)
+    x_i_dummy%val(:,:) = real(aimag(state%u_f%val(:,:,1)),real_outp_precision)
+    y_r_dummy%val(:,:) = real(state%u_f%val(:,:,2),real_outp_precision)
+    y_i_dummy%val(:,:) = real(aimag(state%u_f%val(:,:,2)),real_outp_precision)
+
+    x_r_dummy = rearrange_2Dspectrum(deal_mask(x_r_dummy))
+    x_i_dummy = rearrange_2Dspectrum(deal_mask(x_i_dummy))
+    y_r_dummy = rearrange_2Dspectrum(deal_mask(y_r_dummy))
+    y_i_dummy = rearrange_2Dspectrum(deal_mask(y_i_dummy))
+
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,real(dummy%val(i,j),real_outp_precision)
+	  			write(20,*) i,j,abs(real(x_r_dummy%val(i,j),real_outp_precision)),&    !3: real(u_x)
+                          abs(real(x_i_dummy%val(i,j),real_outp_precision)),&    !4: imag(u_x)
+                          abs(real(y_r_dummy%val(i,j),real_outp_precision)),&    !5: real(u_y)
+                          abs(real(y_i_dummy%val(i,j),real_outp_precision))      !6: imag(u_y)
 			end do
 		end do
     close(20)
@@ -249,15 +278,122 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
-    dummy = rearrange_2Dspectrum(deal_mask(state%chem_f))
-    !dummy = state%chem_f
+
+    dummy = state%chem_f
+		!do i=0,xdim-1
+	  !	do j=0,ydim-1
+	  ! 		dummy%val(i,j) = dummy%val(i,j)*exp(shear*state%t*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+    !  end do
+    !end do
+    dummy = rearrange_2Dspectrum(deal_mask(dummy))
     !dummy = deal_mask(state%chem_f)
 
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_chem_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,real(sqrt((dummy%val(i,j)**2)),real_outp_precision)
+	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
+                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
+			end do
+		end do
+    close(20)
+  end subroutine
+
+  subroutine write_chem_f_remap()
+    !write fourier chem-field to file. Note path variable
+    integer                             :: io_error = 0
+    type(sfield)                        :: dummy
+		character(len=1024) 		  					:: filename
+		character(len=50) 		  						:: suffix
+		character(len=27),parameter					:: path ='./output/data/chem_f_remap/'
+		write(suffix,"(I5,A17)")  int(state%t/write_intervall), ".chem_f_remap.dat"
+    suffix = trim(adjustl(suffix))
+    filename = path //suffix
+		filename = adjustl(filename)
+		filename = trim(filename)
+
+    dummy%val = cmplx(1.0_rp,1.0_rp,rp)
+    dummy%val = dealiase_field(dummy%val)
+
+    do i =0,xdim-1
+      do j =0,ydim-1
+        if(dummy%val(i,j) .NE.cmplx(0.0_rp,0.0_rp,rp)) then
+            dummy%val(i,j) = cmplx(0.0,0.0)
+          else
+          dummy%val(i,j) = state%chem_f%val(i,j)
+        end if
+      end do
+    end do
+
+    dummy = rearrange_2Dspectrum((dummy))
+    !dummy = deal_mask(state%chem_f)
+    !dummy = rearrange_2Dspectrum(deal_mask(dummy))
+
+    !do i =0,xdim-1
+    !  do j =0,ydim-1
+    !    if((i>xdim/6 .AND.i<(5*xdim/6).AND.(j>ydim/6 .AND.j<(5*ydim/6)))) then
+    !    dummy%val(i,j) =cmplx(0.0,0.0)
+    !    end if
+    !  end do
+    !end do
+
+
+		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
+    if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_chem_f_remap!'
+		  do i=0,xdim-1
+	    	do j=0,ydim-1
+	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
+                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
+			end do
+		end do
+    close(20)
+  end subroutine
+
+  subroutine write_temp_f_remap()
+    !write fourier chem-field to file. Note path variable
+    integer                             :: io_error = 0,remap
+    type(sfield)                        :: dummy
+		character(len=1024) 		  					:: filename
+		character(len=50) 		  						:: suffix
+		character(len=27),parameter					:: path ='./output/data/temp_f_remap/'
+		write(suffix,"(I5,A17)")  int(state%t/write_intervall), ".temp_f_remap.dat"
+    suffix = trim(adjustl(suffix))
+    filename = path //suffix
+		filename = adjustl(filename)
+		filename = trim(filename)
+
+    dummy%val(:,:) = cmplx(1.0_rp,1.0_rp,rp)
+    dummy%val = dealiase_field(dummy%val)
+
+    do i =0,xdim-1
+      do j =0,ydim-1
+        if(dummy%val(i,j).NE.cmplx(0.0_rp,0.0_rp,rp)) then
+            dummy%val(i,j) = cmplx(0.0,0.0)
+          else
+            dummy%val(i,j) = state%temp_f%val(i,j)
+        end if
+      end do
+    end do
+
+    dummy = rearrange_2Dspectrum((dummy))
+    !dummy = deal_mask(dummy)
+    !dummy = rearrange_2Dspectrum(deal_mask(dummy))
+
+    !do i =0,xdim-1
+    !  do j =0,ydim-1
+    !    if((i>xdim/6 .AND.i<(5*xdim/6).AND.(j>ydim/6 .AND.j<(5*ydim/6)))) then
+    !    dummy%val(i,j) =cmplx(0.0,0.0)
+    !    end if
+    !  end do
+    !end do
+
+
+		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
+    if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_temp_f_remap!'
+		  do i=0,xdim-1
+	    	do j=0,ydim-1
+	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
+                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
 			end do
 		end do
     close(20)
@@ -275,14 +411,20 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
-    !dummy = state%temp_f
-    dummy = rearrange_2Dspectrum(deal_mask(state%temp_f))
-
+    dummy = state%temp_f
+		!do i=0,xdim-1
+	  !	do j=0,ydim-1
+	  ! 		dummy%val(i,j) = dummy%val(i,j)*exp(shear*state%t*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
+    !  end do
+    !end do
+    dummy = rearrange_2Dspectrum(deal_mask(dummy))
+    !dummy = rearrange_2Dspectrum(deal_mask(state%temp_f))
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_temp_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,real(sqrt((dummy%val(i,j)**2)),real_outp_precision)
+	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
+                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
 			end do
 		end do
     close(20)
@@ -299,7 +441,6 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
-
     if(state%step>=1) then
 		open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_stat!'
@@ -421,7 +562,7 @@ module IO_mod
   	type(sfield)				:: deal_mask
   	type(sfield)				:: u_f
   	complex(kind = rp)											:: max_abs
-  	max_abs = cmplx(maxval(abs(u_f%val)),0.0,rp)
+  	max_abs = cmplx(maxval(abs(real(u_f%val))),maxval(abs(real((aimag(u_f%val))))),rp)
   	deal_mask%val = u_f%val
 
   	deal_mask%val(xdim/3  ,:        ) 	= max_abs			

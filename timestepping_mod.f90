@@ -3,6 +3,7 @@ module timestepping
   use sys_state
   use pdgl
   use plans
+  use remap
   implicit none
 
   contains
@@ -119,7 +120,11 @@ subroutine euler_step()
   state%u_f%val = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
-  call dealiase_all()
+  !call dealiase_all()
+  if(mod(state%step,remapping_rate)==0) then
+    write(*,*) 'remapped'
+    call remap_stepwise()
+  end if
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine
