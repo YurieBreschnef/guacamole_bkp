@@ -30,10 +30,10 @@ program guacamole
     if(benchmarking ==1) call cpu_time(bm_step_starttime)
     if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
       if(mod(state%step,(measure_every)).EQ.0) then
-        call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,state%t)
-        call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,state%t)
-        call transform(state%temp_f%val,state%temp%val,-1,shearing,state%t)
-        call transform(state%chem_f%val,state%chem%val,-1,shearing,state%t)
+        call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
+        call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
+        call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
+        call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
 
         !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,1),state%u%val(:,:,1))
         !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,2),state%u%val(:,:,2))
@@ -59,8 +59,9 @@ program guacamole
       end if 
 
   	if(mod(state%step,(steps/1000)).EQ.0) then
-        write(*,*) (state%step/(steps/1000)) ,'promille done.|  step:',main_stp, &
-            '| t:',state%t,'| dt:',dt,'| shearing:',shearing,'|shearstrength:',shear
+        write(*,*) (state%step/(steps/1000)) ,'permille|step:',main_stp, &
+    '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'shearfac:',&
+                    (2.0*pi)/(shear*maxval(aimag(state%ikx%val))*Ly)
     !    call div_tester()
     end if
 

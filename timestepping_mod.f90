@@ -36,12 +36,12 @@ subroutine RK4_step()
 	!performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   !_____________________k1_________________________________
-  call set_ik_bar(state%t) 
+  call set_ik_bar(sheartime) 
 	state%u_k1%val = fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
 	state%t_k1%val = ft(state%u_f%val ,state%temp_f%val ,state%t)     
 	state%c_k1%val = fc(state%u_f%val ,state%chem_f%val ,state%t)     
   !_____________________k2_________________________________
-  call set_ik_bar(state%t+dt_2) 
+  call set_ik_bar(sheartime) 
 	state%u_k2%val = fu(state%u_f%val   +dt_2*state%u_k1%val,&  !f(u_f,temp_f,chem_f,t)
                       state%temp_f%val+dt_2*state%t_k1%val,&
                       state%chem_f%val+dt_2*state%c_k1%val,&
@@ -54,7 +54,7 @@ subroutine RK4_step()
                       state%chem_f%val+dt_2*state%c_k1%val,&
                       state%t+dt_2)     
   !_____________________k3_________________________________
-  call set_ik_bar(state%t+dt_2) 
+  call set_ik_bar(sheartime) 
 	state%u_k3%val = fu(state%u_f%val   +dt_2*state%u_k2%val,&
                       state%temp_f%val+dt_2*state%t_k2%val,&
                       state%chem_f%val+dt_2*state%c_k2%val,&
@@ -66,7 +66,7 @@ subroutine RK4_step()
                       state%chem_f%val+dt_2*state%c_k2%val,&
                       state%t+dt_2)     
   !_____________________k4_________________________________
-  call set_ik_bar(state%t+dt) 
+  call set_ik_bar(sheartime) 
 	state%u_k4%val = fu(state%u_f%val   +dt*state%u_k3%val,&
                       state%temp_f%val+dt*state%t_k3%val,&
                       state%chem_f%val+dt*state%c_k3%val,&
@@ -101,11 +101,10 @@ end subroutine
 subroutine euler_step()
 	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
-  call set_ik_bar(state%t) 
-	state_np1%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val ,state%chem_f%val,state%t)     
-	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,state%t)     
-	state_np1%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,state%t)     
-
+  call set_ik_bar(sheartime) 
+	state_np1%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
+	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
+	state_np1%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
 
   ! shear the rhs of timestepping one step back (?)
 !  do i =0,xdim-1
@@ -117,14 +116,18 @@ subroutine euler_step()
 !    end do
 !  end do
 
-  state%u_f%val = state_np1%u_f%val
+  state%u_f%val    = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
   !call dealiase_all()
-  if(mod(state%step,remapping_rate)==0) then
-    write(*,*) 'remapped'
-    call remap_stepwise()
-  end if
+
+  !if(sheartime>=((2.0_rp*pi)/(shear*maxval(aimag(state%ikx%val))*Ly))) then
+  !  write(*,*) 'remapped'
+  !  call remap_stepwise()
+  !else
+	!  sheartime=sheartime+dt
+  !end if
+
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine
@@ -157,7 +160,7 @@ subroutine ETD2_step()
     !RHS_nm1 (read as n minus one)
     ! set initial state as the old state
     state_nm1 = state
-    call set_ik_bar(state%t) 
+    call set_ik_bar(sheartime) 
     ! set nm1 variables
     u_RHS_nm1 = fu_N(state_nm1%u_f%val,state_nm1%temp_f%val,state_nm1%chem_f%val,state_nm1%t)
     t_RHS_nm1 = ft_N(state_nm1%u_f%val,state_nm1%temp_f%val                     ,state_nm1%t)

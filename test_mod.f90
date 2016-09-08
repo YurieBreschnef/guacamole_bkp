@@ -52,29 +52,29 @@ module test
     if(debuglevel.LE.1) write(*,*) '  ______________div-test__________________'
     !-------------------------------------------------------------------
     ! set k's to current value
-    call set_ik_bar(state%t)
+    call set_ik_bar(sheartime)
     !calc current maxdiv
     int_dummy_f%val(:,:) =     state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) =    state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_before     = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_before   = maxval(real(int1_dummy%val,real_outp_precision))
 
     !calc maxdiv after one euler step
-    state%u_f%val = state%u_f%val + fu(state%u_f%val,state%temp_f%val,state%chem_f%val,state%t) *dummy_dt
+    state%u_f%val = state%u_f%val + fu(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime) *dummy_dt
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after   = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -89,7 +89,7 @@ module test
  
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val =  fu_Nuk(state%u_f%val,state%t) *dummy_dt
+    state%u_f%val =  fu_Nuk(state%u_f%val,sheartime) *dummy_dt
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                           +state%iky%val(:,:)*state%u_f%val(:,:,2) 
@@ -97,8 +97,8 @@ module test
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                            +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -110,15 +110,15 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val =  fu_diff(state%u_f%val,state%t)
+    state%u_f%val =  fu_diff(state%u_f%val,sheartime)
 
     int_dummy_f%val(:,:) =     state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) =    state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after   = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -129,15 +129,15 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val = fu_buo(state%u_f%val,state%temp_f%val,state%chem_f%val,state%t)
+    state%u_f%val = fu_buo(state%u_f%val,state%temp_f%val,state%chem_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -148,15 +148,15 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%u_f%val = fu_shear(state%u_f%val,state%t)
+    state%u_f%val = fu_shear(state%u_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -168,15 +168,15 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft(state%u_f%val,state%temp_f%val,state%t)
+    state%temp_f%val = ft(state%u_f%val,state%temp_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -188,15 +188,15 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft_L(state%temp_f%val,state%t)
+    state%temp_f%val = ft_L(state%temp_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -207,15 +207,15 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = ft_N(state%u_f%val,state%temp_f%val,state%t)
+    state%temp_f%val = ft_N(state%u_f%val,state%temp_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -227,15 +227,15 @@ module test
 
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = fc(state%u_f%val,state%chem_f%val,state%t)
+    state%temp_f%val = fc(state%u_f%val,state%chem_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -246,15 +246,15 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = fc_L(state%chem_f%val,state%t)
+    state%temp_f%val = fc_L(state%chem_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))
@@ -265,15 +265,15 @@ module test
                                          b_maxdiv_after
     ! reset to init state____________________________________________________________________
     state = init_dummy 
-    state%temp_f%val = fc_N(state%u_f%val,state%chem_f%val,state%t)
+    state%temp_f%val = fc_N(state%u_f%val,state%chem_f%val,sheartime)
 
     int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky%val(:,:)*state%u_f%val(:,:,2) 
     int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                               +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
 
-    call transform(int_dummy_f%val,int_dummy%val,-1,1,state%t) 
-    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
+    call transform(int_dummy_f%val,int_dummy%val,-1,1,sheartime) 
+    call transform(int1_dummy_f%val,int1_dummy%val,-1,1,sheartime) 
 
     maxdiv_after = maxval(real(int_dummy%val,real_outp_precision))
     b_maxdiv_after = maxval(real(int1_dummy%val,real_outp_precision))

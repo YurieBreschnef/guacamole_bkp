@@ -146,7 +146,8 @@ contains
     ! resets the ik_bar wave vectors for a given time
     ! note how the x component is not really used, but still there for generality and possible
     ! future changes
-    real(kind = rp)                              :: ktime
+    real(kind = rp),intent(in)                   :: ktime
+    real(kind = rp)                              :: ky_max
     !TODO very ineffective to reset k's if shearing is off.
 
      !IF(ALL((state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp)))  then
@@ -163,15 +164,27 @@ contains
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
       state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
       state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
-      else
-
-      !state%ikx_bar%val(:,:) = state%ikx%val(:,:) 
-      !state%iky_bar%val(:,:) = state%iky%val(:,:)
-
-      !state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
-      !state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
-      !state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
     end if
+
+    !!REMAPPING!
+    !ky_max = abs(aimag(state%iky%val(1,ydim/2)))
+    !do i=xdim/2+1,xdim
+    !  do j=0,ydim-1
+    !      if(abs(aimag(state%iky_bar_sqr%val(i,j)))>ky_max)then
+    !        state%ikx_bar_sqr%val(i,(ydim-1)-j) = state%ikx_bar_sqr%val(i,j) 
+    !      end if
+    !  end do
+    !end do
+
+    !ky_max = abs(aimag(state%iky%val(1,ydim/2+1)))  !for even N note the way fourier coefficients are saved
+    !do i=1,xdim/2 ! for i=0 kx is zero and no shiftig is being done
+    !  do j=0,ydim-1
+    !      if(abs(aimag(state%iky_bar_sqr%val(i,j)))>ky_max)then
+    !        state%ikx_bar_sqr%val(i,(ydim-1)-j) = state%ikx_bar_sqr%val(i,j) 
+    !      end if
+    !  end do
+    !end do
+    
   end subroutine
 
 end module

@@ -65,7 +65,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '-CHEM diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_comp,'|dt:',dt
@@ -75,7 +75,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dx**2)/diff :X ',((Lx/real(xdim))**2)/D_visc,'|dt:',dt
@@ -85,7 +85,7 @@ module init
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) ''
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     if(debuglevel .GE. 1) write(*,*) '- V   diffusive timescale tau=(dy**2)/diff :Y ',((Ly/real(ydim))**2)/D_visc,'|dt:',dt
@@ -94,7 +94,7 @@ module init
       write(*,*) '_______________________________________________________________________________________________________________'
       write(*,*) 'WARNING: Diffusive timescale is shorter than dt!'
       write(*,*) '_______________________________________________________________________________________________________________'
-      !stop
+      stop
       !TODO make the plausi check the timestepping used, ETD is not as badly restricted as RK4 with diffusive timescale
     end if
     write(*,*) 'smallest possible number:', epsilon(1.0_rp)
@@ -213,6 +213,13 @@ module init
       amp = rand()
         do i=0,xdim-1
           do j=0,ydim-1
+              ! FOURIER INIT
+              !state%temp%val(i,j) = state%temp%val(i,j) &
+              !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+              !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+              !state%temp_f%val(i,j) = cmplx(1.0_rp,1.0_rp,rp) 
+              !-----------------------------------------------------------------------
+
               !state%temp%val(i,j) = state%temp%val(i,j) &
               !+cmplx((amp-0.5_rp)*exp(-( (20.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
               !             +(20.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
@@ -240,10 +247,12 @@ module init
     end do
     state%temp%val = state%temp%val*0.05_rp
 
-    !call s_trafo(state%temp,state%temp_f,0)
-    call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
     state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
+    call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
     state%temp_f%val = state%temp_f%val/real(xdim*ydim,rp)   !FFTW NORM
+
+    !call dfftw_execute_dft(ifull2D,state%temp_f%val(:,:),state%temp%val(:,:))
+
     if(debuglevel .GE. 1) write(*,*) '  -done with init_temp.'
   end subroutine
 
@@ -358,7 +367,7 @@ module init
       write(*,*) 'init_k(): NAN detected! in imag part of iky'
       stop
     end if
-    call set_ik_bar(state%t)  
+    call set_ik_bar(sheartime)  
     if(debuglevel .GE. 1) write(*,*) '  -done with init_k.'
   end subroutine
 end module

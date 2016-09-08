@@ -5,6 +5,8 @@ load './gnuplot-palettes-master/jet.pal'
 aspect_ratio = 1
 Lx = 32 
 Ly = 32  
+#Lx = 8 
+#Ly = 8  
 
 no_of_img = 299 
 
@@ -39,7 +41,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,2
-   set xrange [0.0:4.0]
+   #set xrange [0.0:4.0]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
@@ -192,9 +194,9 @@ do for [i=0:no_of_img] {
 		unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
-    set terminal pngcairo size 1200,900 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1200,1200 enhanced font 'Verdana,10'
     set output './visual/spec_inspect_combo/'.i.'.png'
-  	set multiplot layout 2,3
+  	set multiplot layout 3,3
 
     unset tics
     unset colorbox
@@ -217,16 +219,16 @@ do for [i=0:no_of_img] {
   	set title 'real cutof part of fourier spectrum of chem  field'
    	plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
 
-  	#set title 'absolute magnitude  of velocity field'
-   	#plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
-  	#set title 'Real part of fourier transform of u_x '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
-  	##set title 'Imag part of fourier transform of u_x '
-   	##plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
-  	#set title 'Real part of fourier transform of u_y '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
-  	##set title 'Imag part of fourier transform of u_y '
-   	##plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
+  	set title 'absolute magnitude  of velocity field'
+   	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
+  	set title 'Real part of fourier transform of u_x '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
+  	#set title 'Imag part of fourier transform of u_x '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
+  	set title 'Real part of fourier transform of u_y '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
+  	#set title 'Imag part of fourier transform of u_y '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
 
 
   	unset multiplot

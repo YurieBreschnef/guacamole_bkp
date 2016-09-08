@@ -11,18 +11,18 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 256 
-	integer(kind=ip),parameter		:: ydim	        = 256  
+	integer(kind=ip),parameter		:: xdim	        = 128 
+	integer(kind=ip),parameter		:: ydim	        = 128  
 
 	integer(kind = ip),parameter	:: seed 		    = 111111	! seed for random init
-	integer(kind = ip),parameter	:: maxfiles 	  = 400 ! maximum no of output files per type
+	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
 	integer(kind = ip),parameter	:: measure_every= 5  		  ! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 32.0 !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 32.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 64.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 64.0 !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter     :: tmax                      = 200.0_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
+	real(kind = rp)					      :: dt 	                     = 1.0e-4_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -49,19 +49,22 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 0.5_rp
-  integer(kind = ip)            :: shearing = 1
+	real(kind = rp)               :: shear    = 0.05_rp
+  integer(kind = ip)            :: shearing = 0
+	real(kind = rp)               :: sheartime= 0.0_rp
+  
   integer(kind = ip)            :: benchmarking = 0
-  integer(kind = ip)             :: remapping = 1
-  integer(kind = ip)             :: remapping_rate = 2000
 
-	real(kind = rp),parameter     :: D_visc   = 0.14_rp 
-	real(kind = rp),parameter			:: D_therm  = 0.020_rp
-	real(kind = rp),parameter			:: D_comp   = 0.0002_rp
-	real(kind = rp),parameter			:: B_therm  = 1.0_rp
+  integer(kind = ip)             :: remapping = 0
+  integer(kind = ip)             :: remapping_rate = 0 
+
+	real(kind = rp),parameter     :: D_visc   = 0.7_rp 
+	real(kind = rp),parameter			:: D_therm  = 0.010_rp
+	real(kind = rp),parameter			:: D_comp   = 0.0001_rp
+	real(kind = rp),parameter			:: B_therm  = 1.1_rp
 	real(kind = rp),parameter			:: B_comp   = 5.0_rp
-	real(kind = rp),parameter			:: S_therm  = 5.5_rp  
-	real(kind = rp),parameter			:: S_comp   = 1.0_rp 
+	real(kind = rp),parameter			:: S_therm  = 2.5_rp  
+	real(kind = rp),parameter			:: S_comp   = 0.5_rp 
 
 	!real(kind = rp),parameter     :: D_visc   = 0.0000000000014_rp 
 	!real(kind = rp),parameter			:: D_therm  = 0.00000000000020_rp

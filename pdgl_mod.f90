@@ -92,10 +92,6 @@ function fu_shear(u_f,t)
           if (.NOT.(i==0.AND.j==0)) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
-             !fu_shear(i,j,1) = fu_shear(i,j,1)+((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
-             !                             /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
-             !fu_shear(i,j,2) = fu_shear(i,j,2)+((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
-             !                             /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              fu_shear(i,j,1) = fu_shear(i,j,1)+2.0_rp*((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
@@ -179,10 +175,10 @@ function fu_Nuk(u_f,t)
   !  stop
   !end if
 
-  call transform(omega_f(:,:,1),omega(:,:,1),-1,shearing,state%t)
-  call transform(omega_f(:,:,2),omega(:,:,2),-1,shearing,state%t)
-  call transform(u_f(:,:,1),u(:,:,1),-1,shearing,state%t)
-  call transform(u_f(:,:,2),u(:,:,2),-1,shearing,state%t)
+  call transform(omega_f(:,:,1),omega(:,:,1),-1,shearing,t)
+  call transform(omega_f(:,:,2),omega(:,:,2),-1,shearing,t)
+  call transform(u_f(:,:,1),u(:,:,1),-1,shearing,t)
+  call transform(u_f(:,:,2),u(:,:,2),-1,shearing,t)
 
   !do crossproduct
   Nuk = -crossp(omega,u)
@@ -191,8 +187,8 @@ function fu_Nuk(u_f,t)
   !  stop
   !end if
 
-  call transform(Nuk(:,:,1),Nuk_f(:,:,1),1,shearing,state%t)
-  call transform(Nuk(:,:,2),Nuk_f(:,:,2),1,shearing,state%t)
+  call transform(Nuk(:,:,1),Nuk_f(:,:,1),1,shearing,t)
+  call transform(Nuk(:,:,2),Nuk_f(:,:,2),1,shearing,t)
   !IF(ANY(IsNaN(real(Nuk_f))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in Nuk_f after trafo'
   !  stop
@@ -239,35 +235,39 @@ function fu_Nuk(u_f,t)
   if(benchmarking ==1) call cpu_time(bm_fu_Nuk_endtime)
 end function
 !---------------------------F_temp------------------------------------------------------------
+
 function ft(u_f,temp_f,t)
-  !rhs of temperature equation
+  !rhs of temp equation
+  !TODO make transforms as effective as possible
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
-  real(kind = rp),intent(in)                                   :: t
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
+  real(kind = rp),intent(in)                                            :: t
   if(benchmarking ==1) call cpu_time(bm_ft_starttime)
   call set_ik_bar(t)
-  !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
-  !  write(*,*) 'func ft(): NAN detected in input array'
-  !  stop
-  !end if
-
   ft = cmplx(0.0,0.0,rp)
-  ft = ft + ft_L(temp_f,t) + ft_N(u_f,temp_f,t)  
-  ! F =           LIN       +     NONLIN
-  !ft = ft + ft_adv(u_f,temp_f,t)  !ADVECTION
-  !ft = ft + ft_diff(temp_f)       !DIFFUSION
-  !ft = ft + ft_strat(u_f,temp_f)  !BACKGROUND stratification
+  ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
+  ft = ft + ft_diff(temp_f)           !DIFFUSION
+  ft = ft + ft_strat(u_f,temp_f)      !BACKGROUND STRATIFICATION
   !ft = dealiase_field(ft)
+  !IF(ALL(ft ==cmplx(0.0_rp,0.0,rp)))  then
+  !  write(*,*) 'func ft(): all output values are zero! '
+  !  !stop
+  !end if
   if(benchmarking ==1) call cpu_time(bm_ft_endtime)
 end function 
 !--------------------------------------
 function ft_L(temp_f,t)
   !linear part of temp evolution equation
+  !TODO make transforms as effective as possible
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_L
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
   real(kind = rp),intent(in)                                   :: t
   call set_ik_bar(t)
+  !IF(ANY(IsNaN(real(temp_f))))  then
+  !  write(*,*) 'func ft_L(): NAN detected in input array'
+  !  stop
+  !end if
   ft_L = cmplx(0.0,0.0,rp)
   ft_L = ft_L + ft_diff(temp_f)       !DIFFUSION
   !ft_L = dealiase_field(ft_L)
@@ -277,15 +277,15 @@ function ft_N(u_f,temp_f,t)
   ! nonlinear part of temp evolution equation
   !TODO make transforms as effective as possible
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_N
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)     ,intent(in):: temp_f 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2) ,intent(in):: u_f
   real(kind = rp),intent(in)                                   :: t
   call set_ik_bar(t)
   !IF(ALL((real(u_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func ft_N():  WARNING: ALL ZEROES detected in input array u_f'
+  !  write(*,*) 'func ft_N(): WARNING: ALL ZEROES detected in input array u_f'
   !end if
   !IF(ALL((real(temp_f,rp).EQ.0.0_rp)))  then
-  !  write(*,*) 'func ft_N(): WARNING: ALL ZEROES detected in input array temp_f'
+  !  write(*,*) 'func ft_N(): WARNING ALL ZEROES detected in input array temp_f'
   !end if
   !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
   !  write(*,*) 'func ft_N(): NAN detected in input array'
@@ -300,9 +300,9 @@ end function
 !--------------------------------------
 function ft_adv(u_f,temp_f,t)
   implicit none
-  ! temperature advection term  [nabla dot (temp*u)]
+  ! temp advection term  [nabla dot (temp*u)]
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_adv
-  complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f 
+  complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
   if(benchmarking ==1) call cpu_time(bm_ft_adv_starttime)
@@ -310,16 +310,19 @@ function ft_adv(u_f,temp_f,t)
   !  write(*,*) 'func ft_adv(): NAN detected in input array'
   !  stop
   !end if
-  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
-  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
-  call transform(temp_f,state%s_dummy%val,-1,shearing,state%t)
-  !                                   temp       *        u          (realspace)
+
+  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
+  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
+  call transform(temp_f,state%s_dummy%val,-1,shearing,t)
+
+  !                                            temp_f* u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
   state%dummy%val(:,:,2) = state%s_dummy%val(:,:)*state%dummy%val(:,:,2)
 
   !now trafo temp*u back to fourier space
-  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,state%t)
-  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,state%t)
+  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
+  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
+
 ! advection 
  ft_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
                 +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
@@ -327,22 +330,22 @@ function ft_adv(u_f,temp_f,t)
 end function
 !--------------------------------------
 function ft_diff(temp_f)
-  ! temperature diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
+  ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   if(benchmarking ==1) call cpu_time(bm_ft_diff_starttime)
-  IF(ANY(IsNaN(real(temp_f))))  then
-    write(*,*) 'func ft_adv(): NAN detected in input array'
-    stop
-  end if
-  !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:)) 
-  ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:)) 
+  !IF(ANY(IsNaN(real(temp_f))))  then
+  !  write(*,*) 'func ft_diff(): NAN detected in input array'
+  !  stop
+  !end if
+  !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:))
+  ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
   if(benchmarking ==1) call cpu_time(bm_ft_diff_endtime)
 end function
 !--------------------------------------
 function ft_strat(u_f,temp_f)
-  ! influence of temperature background stratification
+  ! influence of chemical background stratification
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_strat
@@ -350,7 +353,6 @@ function ft_strat(u_f,temp_f)
   ft_strat(:,:)  = -S_therm*u_f(:,:,2)
   if(benchmarking ==1) call cpu_time(bm_ft_strat_endtime)
 end function
-
 !---------------------------F_chem------------------------------------------------------------
 function fc(u_f,chem_f,t)
   !rhs of compositional equation
@@ -427,17 +429,17 @@ function fc_adv(u_f,chem_f,t)
   !  stop
   !end if
 
-  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,state%t)
-  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,state%t)
-  call transform(chem_f,state%s_dummy%val,-1,shearing,state%t)
+  call transform(u_f(:,:,1),state%dummy%val(:,:,1),-1,shearing,t)
+  call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
+  call transform(chem_f,state%s_dummy%val,-1,shearing,t)
 
   !                                             chem* u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
   state%dummy%val(:,:,2) = state%s_dummy%val(:,:)*state%dummy%val(:,:,2)
 
   !now trafo chem*u back to fourier space
-  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,state%t)
-  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,state%t)
+  call transform(state%dummy%val(:,:,1),state%dummy_f%val(:,:,1), 1,shearing,t)
+  call transform(state%dummy%val(:,:,2),state%dummy_f%val(:,:,2), 1,shearing,t)
 
 ! advection 
  fc_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
@@ -454,8 +456,8 @@ function fc_diff(chem_f)
   !  write(*,*) 'func fc_diff(): NAN detected in input array'
   !  stop
   !end if
-  !fc_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*chem_f(:,:))
-  fc_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
+  !fc_diff(:,:)  = D_comp*( state%iki_sqr%val(:,:)*chem_f(:,:))
+  fc_diff(:,:)  = D_comp*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
   if(benchmarking ==1) call cpu_time(bm_fc_diff_endtime)
 end function
