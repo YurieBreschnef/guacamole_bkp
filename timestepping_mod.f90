@@ -102,6 +102,12 @@ subroutine euler_step()
 	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
   if(debuglevel .GE.3) write(*,*)'euler sub called'
 
+  ! REMAPPING
+  if(remapping==1 .AND.shearing==1.AND.sheartime+dt >= T_rm) then
+    write(*,*) T_rm,'has passed -->remapped!'
+    call remap_stepwise()
+  end if
+
   call set_ik_bar(sheartime) 
 	state_np1%u_f%val    = state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
 	state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
@@ -112,11 +118,6 @@ subroutine euler_step()
   state%chem_f%val = state_np1%chem_f%val
   call dealiase_all()
 
-  ! REMAPPING
-  if(sheartime+dt >= T_rm) then
-    write(*,*) T_rm,'has passed -->remapped!'
-    call remap_stepwise()
-  end if
 
 	sheartime = sheartime+dt
 	state%t   = state%t+dt

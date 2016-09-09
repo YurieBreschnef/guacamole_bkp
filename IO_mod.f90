@@ -407,14 +407,15 @@ module IO_mod
     filename = path //suffix
 		filename = adjustl(filename)
 		filename = trim(filename)
-    dummy = state%temp_f
 		!do i=0,xdim-1
 	  !	do j=0,ydim-1
 	  ! 		dummy%val(i,j) = dummy%val(i,j)*exp(shear*state%t*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
     !  end do
     !end do
+
+    dummy = state%temp_f
     dummy = rearrange_2Dspectrum(deal_mask(dummy))
-    !dummy = rearrange_2Dspectrum(deal_mask(state%temp_f))
+
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_temp_f!'
 		  do i=0,xdim-1
