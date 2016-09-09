@@ -21,8 +21,8 @@ module const
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 64.0 !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 64.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 16.0 !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 16.0 !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -30,8 +30,8 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 200.0_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-4_rp
+	real(kind = rp),parameter     :: tmax                      = 20.0_rp
+	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -49,13 +49,14 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 0.05_rp
-  integer(kind = ip)            :: shearing = 0
+	real(kind = rp)               :: shear    = 1.00_rp
+  integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
+	real(kind = rp)               :: T_rm 
   
   integer(kind = ip)            :: benchmarking = 0
 
-  integer(kind = ip)             :: remapping = 0
+  integer(kind = ip)             :: remapping = 1
   integer(kind = ip)             :: remapping_rate = 0 
 
 	real(kind = rp),parameter     :: D_visc   = 0.7_rp 

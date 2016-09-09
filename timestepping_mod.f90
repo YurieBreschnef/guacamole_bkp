@@ -100,36 +100,27 @@ end subroutine
 !------------------------------------------------------------------------------------------
 subroutine euler_step()
 	!performs a timestep with simple euler and stores the new result in u_f,temp_f,chem_f
-  if(debuglevel .GE.3) write(*,*)'RK4 sub called'
-  call set_ik_bar(sheartime) 
-	state_np1%u_f%val    =state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
-	state_np1%temp_f%val =state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
-	state_np1%chem_f%val =state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
+  if(debuglevel .GE.3) write(*,*)'euler sub called'
 
-  ! shear the rhs of timestepping one step back (?)
-!  do i =0,xdim-1
-!    do j =0,ydim-1
-!      state_np1%u_f%val(i,j,1)  = state_np1%u_f%val(i,j,1)  *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-!      state_np1%u_f%val(i,j,2)  = state_np1%u_f%val(i,j,2)  *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-!      state_np1%temp_f%val(i,j) = state_np1%temp_f%val(i,j) *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly) 
-!      state_np1%chem_f%val(i,j) = state_np1%chem_f%val(i,j) *exp(-shear*dt*state%ikx%val(i,j)*(real(j,rp)/real(ydim,rp))*Ly)
-!    end do
-!  end do
+  call set_ik_bar(sheartime) 
+	state_np1%u_f%val    = state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
+	state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
+	state_np1%chem_f%val = state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
 
   state%u_f%val    = state_np1%u_f%val
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
-  !call dealiase_all()
+  call dealiase_all()
 
-  !if(sheartime>=((2.0_rp*pi)/(shear*maxval(aimag(state%ikx%val))*Ly))) then
-  !  write(*,*) 'remapped'
-  !  call remap_stepwise()
-  !else
-	!  sheartime=sheartime+dt
-  !end if
+  ! REMAPPING
+  if(sheartime+dt >= T_rm) then
+    write(*,*) T_rm,'has passed -->remapped!'
+    call remap_stepwise()
+  end if
 
-	state%t=state%t+dt
-	state%step=state%step+1
+	sheartime = sheartime+dt
+	state%t   = state%t+dt
+	state%step= state%step+1
 end subroutine
 !------------------------------------------------------------------------------------------
 !-------------------------------------------------------------------------------------------
@@ -153,7 +144,6 @@ subroutine ETD2_step()
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_exp_qh ! read as exp(q*h)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_n_factor 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: c_RHS_nm1_factor 
-
 
   if(state%step ==0) then
     !the very first step of sim is done in euler way because ETD2 needs the past time variable 

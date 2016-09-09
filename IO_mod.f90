@@ -9,14 +9,10 @@ module IO_mod
   subroutine write_all()
     !if(debuglevel <= 2) write(*,*) '-calling write_all()'
     
-    call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,state%t)
-    call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,state%t)
-    call transform(state%temp_f%val,state%temp%val,-1,shearing,state%t)
-    call transform(state%chem_f%val,state%chem%val,-1,shearing,state%t)
-    !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,1),state%u%val(:,:,1))
-    !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,2),state%u%val(:,:,2))
-    !call dfftw_execute_dft(ifull2D,state%temp_f%val,state%temp%val)
-    !call dfftw_execute_dft(ifull2D,state%chem_f%val,state%chem%val)
+    call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
+    call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
+    call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
+    call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
 
     call write_u()
     call write_abs_u()

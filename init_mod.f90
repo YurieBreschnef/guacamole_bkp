@@ -17,6 +17,8 @@ module init
   	dt_2 	        = dt/2.0_rp
   	steps       	= int(tmax/dt,ip)
   	state%step    = 0
+    T_rm          = real(Lx/(shear*Ly),rp) 
+
 
     call init_plans()   
     ! ALWAYS INITIALIZE PLANS BEFORE THE ARRAY, since the fftw planning routines overwrite

@@ -24,21 +24,16 @@ program guacamole
   last_written = last_written+write_intervall
 
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
-
-
   do main_stp= 0,steps
     if(benchmarking ==1) call cpu_time(bm_step_starttime)
+
+    ! STATISTICS WRITING----------------------------------------------------------------------
     if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
       if(mod(state%step,(measure_every)).EQ.0) then
         call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
         call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
         call transform(state%temp_f%val,state%temp%val,-1,shearing,sheartime)
         call transform(state%chem_f%val,state%chem%val,-1,shearing,sheartime)
-
-        !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,1),state%u%val(:,:,1))
-        !call dfftw_execute_dft(ifull2D,state%u_f%val(:,:,2),state%u%val(:,:,2))
-        !call dfftw_execute_dft(ifull2D,state%temp_f%val(:,:),state%temp%val(:,:))
-        !call dfftw_execute_dft(ifull2D,state%chem_f%val(:,:),state%chem%val(:,:))
         call write_u_stat()
         call write_E_stat()
         call write_T_stat()
@@ -46,10 +41,12 @@ program guacamole
         call write_sys_stat()
       end if 
     if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
+    ! ----------------------------------------------------------------------------------------
 
+
+    ! FILE WRITING----------------------------------------------------------------------------
     if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
     if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
-
       if(state%t > last_written) then
         if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
         call write_all()
@@ -57,13 +54,38 @@ program guacamole
         last_written = last_written+write_intervall
         if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
       end if 
+    ! ----------------------------------------------------------------------------------------
 
+    ! CONSOLE OUTPUT----------------------------------------------------------------------------
   	if(mod(state%step,(steps/1000)).EQ.0) then
         write(*,*) (state%step/(steps/1000)) ,'permille|step:',main_stp, &
-    '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'shearfac:',&
-                    (2.0*pi)/(shear*maxval(aimag(state%ikx%val))*Ly)
+    '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'T_rm',T_rm
+                 
     !    call div_tester()
     end if
+    ! ----------------------------------------------------------------------------------------
+
+
+
+    ! TIMESTEPPING ---------------------------------------------------------------------------
+    if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
+      !call RK4_adjust_dt()
+      !call RK4_step()
+      call euler_step()
+      !call div_tester()
+      !call ETD2_step()
+    if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
+    ! ----------------------------------------------------------------------------------------
+    if(benchmarking ==1) call cpu_time(bm_step_endtime)
+    !BENCHMARKING------------------------------------
+    !if(benchmarking ==1) call bm_evaluate(.true.)
+  end do
+
+  if(debuglevel <= 1) write(*,*) '__________________END OF TIMESTEPPING______________________'
+  if(debuglevel <= 1) write(*,*) '__________________END______________________________________'
+  call exit_all()
+end program guacamole 
+
 
 
     !if(state%t >1.0_rp*tmax/5.0_rp) then
@@ -85,21 +107,3 @@ program guacamole
     !    shearing = 1
     !    shear =0.10
     !end if
-
-    if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
-      !call RK4_adjust_dt()
-      !call RK4_step()
-      call euler_step()
-      !call div_tester()
-      !call ETD2_step()
-    if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
-    if(benchmarking ==1) call cpu_time(bm_step_endtime)
-
-    !BENCHMARKING------------------------------------
-    if(benchmarking ==1) call bm_evaluate(.true.)
-  end do
-
-  if(debuglevel <= 1) write(*,*) '__________________END OF TIMESTEPPING______________________'
-  if(debuglevel <= 1) write(*,*) '__________________END______________________________________'
-  call exit_all()
-end program guacamole 
