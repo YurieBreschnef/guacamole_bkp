@@ -21,7 +21,7 @@ program guacamole
   call test_all()
   ! write initial state to file (name: 0.type.dat)
   call write_all()
-  last_written = last_written+write_intervall
+   last_written = last_written+write_intervall
 
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
   do main_stp= 0,steps
