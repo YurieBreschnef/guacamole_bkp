@@ -18,6 +18,7 @@ timestepping_mod.f90 \
 test_mod.f90 \
 main.f90 \
 -lfftw3 \
+-fopenmp \
 -lm \
 -O3 \
 -g \

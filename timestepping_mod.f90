@@ -103,8 +103,7 @@ subroutine euler_step()
   if(debuglevel .GE.3) write(*,*)'euler sub called'
 
   ! REMAPPING
-  if(remapping==1 .AND.shearing==1.AND.sheartime+dt >= T_rm) then
-    write(*,*) T_rm,'has passed -->remapped!'
+  if(remapping==1 .AND.shearing==1.) then
     call remap_stepwise()
   end if
 

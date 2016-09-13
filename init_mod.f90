@@ -247,7 +247,7 @@ module init
         end do
       end do
     end do
-    state%temp%val = state%temp%val*0.05_rp
+    state%temp%val = state%temp%val*0.10_rp
 
     state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -298,7 +298,7 @@ module init
         end do
       end do
     end do
-    state%chem%val = state%chem%val * 0.05_rp
+    state%chem%val = state%chem%val * 0.10_rp
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM

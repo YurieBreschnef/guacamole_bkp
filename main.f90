@@ -3,7 +3,7 @@ program guacamole
   !stepping routines in the timestepping_mod, and writing to files by calling write_all()
   !from IO_module.
 
-  !use omp_lib
+  use omp_lib
   !use iso_c_binding
   use plans
   use sys_state
