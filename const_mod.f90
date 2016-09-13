@@ -2,6 +2,7 @@ module const
 	! constants-module: contains simulation wide constants of parameter type
   !if variables are not flagged parameter, they may be temporarily changed (e.g. stepwidth)
 	use ISO_C_BINDING 
+  use omp_lib
   implicit none
 	include "fftw3.f03"
 	integer,parameter				      :: rp 	= 8					                !real-precision
@@ -11,8 +12,8 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 128 
-	integer(kind=ip),parameter		:: ydim	        = 128  
+	integer(kind=ip),parameter		:: xdim	        = 131 
+	integer(kind=ip),parameter		:: ydim	        = 131  
 
 	integer(kind = ip),parameter	:: seed 		    = 111111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 80 ! maximum no of output files per type
@@ -58,6 +59,16 @@ module const
 
   integer(kind = ip)             :: remapping = 1
   integer(kind = ip)             :: remapping_rate = 0 
+
+
+  integer(kind = ip)             :: threads   = 0 
+  integer(kind = ip)             :: my_thread_id= 0   !thread specific values
+
+  integer(kind = ip)             :: my_x_start
+  integer(kind = ip)             :: my_x_end
+  integer(kind = ip)             :: my_y_start
+  integer(kind = ip)             :: my_y_end
+
 
 	real(kind = rp),parameter     :: D_visc   = 0.07_rp 
 	real(kind = rp),parameter			:: D_therm  = 0.010_rp

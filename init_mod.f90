@@ -18,7 +18,10 @@ module init
   	steps       	= int(tmax/dt,ip)
   	state%step    = 0
     T_rm          = real(Lx/(shear*Ly),rp) 
-
+    threads = omp_get_max_threads ( )     ! find out on how many threads this prog is running
+    my_thread_id= omp_get_thread_num ( )
+    write ( *, '(a,i8)' ) 'The number of processors available = ', omp_get_num_procs ( )
+    write ( *, '(a,i8)' ) 'The number of threads available    = ', threads 
 
     call init_plans()   
     ! ALWAYS INITIALIZE PLANS BEFORE THE ARRAY, since the fftw planning routines overwrite
@@ -28,6 +31,7 @@ module init
     call init_chem()
     call init_k()
     call init_plausibility()
+    
     ! TODO write sub to accomodate old state initiation 
     if(debuglevel .GE. 1) write(*,*) '-done with init_all.'
   end subroutine
