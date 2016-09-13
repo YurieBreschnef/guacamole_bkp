@@ -12,7 +12,7 @@ cd ..
 bash compile_it.sh
 
 echo "bash: starting run"
-export OMP_NUM_THREADS=4
+export OMP_NUM_THREADS=2
 ./a.out   || { echo 'bash: ----RUN FAILED----' ; exit 1;  }
 echo "bash: run... done"
 
