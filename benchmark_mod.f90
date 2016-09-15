@@ -10,9 +10,9 @@ real(kind = rp)               :: bm_statwrite_starttime
 real(kind = rp)               :: bm_statwrite_endtime
 real(kind = rp)               :: bm_statwrite_time
 
-real(kind = rp)               :: bm_trafo_starttime
-real(kind = rp)               :: bm_trafo_endtime
-real(kind = rp)               :: bm_trafo_time
+real(kind = 8)               :: bm_trafo_starttime
+real(kind = 8)               :: bm_trafo_endtime
+real(kind = 8)               :: bm_trafo_time
 
 real(kind = rp)               :: bm_filewrite_starttime
 real(kind = rp)               :: bm_filewrite_endtime
@@ -98,24 +98,25 @@ subroutine bm_evaluate(write_to_console)
   if(write_to_console) then
   write(*,*) '______________________________BENCHMARK:_______________________________________'
   write(*,*) 'total step:                :',bm_step_time               ,'sec,'
-  write(*,*) '  -statwrite               :',bm_statwrite_time          ,'sec,',int(100.0_rp*bm_statwrite_time/bm_step_time),'%'
-  write(*,*) '  -filewrite               :',bm_filewrite_time,'sec,',int(100.0_rp*bm_filewrite_time/bm_step_time),'%'
-  write(*,*) '  -timestepping:           :',bm_timestepping_time,'sec,',int(100.0_rp*bm_timestepping_time/bm_step_time),'%'
-  write(*,*) '    -function fu:          :',bm_fu_time,'sec,',int(100.0_rp*bm_fu_time/bm_step_time),'%'
-  write(*,*) '       -function fu_Nuk    :',bm_fu_Nuk_time,'sec,',int(100.0_rp*bm_fu_Nuk_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_buo    :',bm_fu_buo_time,'sec,',int(100.0_rp*bm_fu_buo_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_diff   :',bm_fu_diff_time,'sec,',int(100.0_rp*bm_fu_diff_time/bm_fu_time),'%'
-  write(*,*) '       -function fu_shear  :',bm_fu_shear_time,'sec,',int(100.0_rp*bm_fu_shear_time/bm_fu_time),'%'
+  write(*,*) '  -statwrite               :  ',bm_statwrite_time          ,'sec,',int(100.0_rp*bm_statwrite_time/bm_step_time),'%'
+  write(*,*) '  -filewrite               :  ',bm_filewrite_time,'sec,',int(100.0_rp*bm_filewrite_time/bm_step_time),'%'
+  write(*,*) '  -timestepping:           :  ',bm_timestepping_time,'sec,',int(100.0_rp*bm_timestepping_time/bm_step_time),'%'
+  write(*,*) '    -function fu:          :    ',bm_fu_time,'sec,',int(100.0_rp*bm_fu_time/bm_step_time),'%'
+  write(*,*) '       -function fu_Nuk    :      ',bm_fu_Nuk_time,'sec,',int(100.0_rp*bm_fu_Nuk_time/bm_fu_time),'%'
+  write(*,*) '       -function fu_buo    :      ',bm_fu_buo_time,'sec,',int(100.0_rp*bm_fu_buo_time/bm_fu_time),'%'
+  write(*,*) '       -function fu_diff   :      ',bm_fu_diff_time,'sec,',int(100.0_rp*bm_fu_diff_time/bm_fu_time),'%'
+  write(*,*) '       -function fu_shear  :      ',bm_fu_shear_time,'sec,',int(100.0_rp*bm_fu_shear_time/bm_fu_time),'%'
 
-  write(*,*) '    -function ft:          :',bm_ft_time,'sec,',int(100.0_rp*bm_ft_time/bm_step_time),'%'
-  write(*,*) '       -function ft_adv    :',bm_ft_adv_time,'sec,',int(100.0_rp*bm_ft_adv_time/bm_ft_time),'%'
-  write(*,*) '       -function ft_diff   :',bm_ft_diff_time,'sec,',int(100.0_rp*bm_ft_diff_time/bm_ft_time),'%'
-  write(*,*) '       -function ft_strat  :',bm_ft_strat_time,'sec,',int(100.0_rp*bm_ft_strat_time/bm_ft_time),'%'
+  write(*,*) '    -function ft:          :    ',bm_ft_time,'sec,',int(100.0_rp*bm_ft_time/bm_step_time),'%'
+  write(*,*) '       -function ft_adv    :      ',bm_ft_adv_time,'sec,',int(100.0_rp*bm_ft_adv_time/bm_ft_time),'%'
+  write(*,*) '       -function ft_diff   :      ',bm_ft_diff_time,'sec,',int(100.0_rp*bm_ft_diff_time/bm_ft_time),'%'
+  write(*,*) '       -function ft_strat  :      ',bm_ft_strat_time,'sec,',int(100.0_rp*bm_ft_strat_time/bm_ft_time),'%'
 
-  write(*,*) '    -function fc:          :',bm_fc_time,'sec,',int(100.0_rp*bm_fc_time/bm_step_time),'%'
-  write(*,*) '       -function fc_adv    :',bm_fc_adv_time,'sec,',int(100.0_rp*bm_fc_adv_time/bm_fc_time),'%'
-  write(*,*) '       -function fc_diff   :',bm_fc_diff_time,'sec,',int(100.0_rp*bm_fc_diff_time/bm_fc_time),'%'
-  write(*,*) '       -function fc_strat  :',bm_fc_strat_time,'sec,',int(100.0_rp*bm_fc_strat_time/bm_fc_time),'%'
+  write(*,*) '    -function fc:          :    ',bm_fc_time,'sec,',int(100.0_rp*bm_fc_time/bm_step_time),'%'
+  write(*,*) '       -function fc_adv    :      ',bm_fc_adv_time,'sec,',int(100.0_rp*bm_fc_adv_time/bm_fc_time),'%'
+  write(*,*) '       -function fc_diff   :      ',bm_fc_diff_time,'sec,',int(100.0_rp*bm_fc_diff_time/bm_fc_time),'%'
+  write(*,*) '       -function fc_strat  :      ',bm_fc_strat_time,'sec,',int(100.0_rp*bm_fc_strat_time/bm_fc_time),'%'
+  write(*,*) ''
   write(*,*) '    -single trafo          :',bm_trafo_time,'sec,',int(100.0_rp*bm_trafo_time/bm_step_time),'%'
   write(*,*) 'percent unnacounted        :',1.0_rp - (bm_statwrite_time+bm_filewrite_time+bm_timestepping_time)/bm_step_time,'%'
   ! note that ft and fc will take the same ammount of computing time

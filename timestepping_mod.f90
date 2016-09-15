@@ -34,6 +34,12 @@ end subroutine
 !------------------------------------------------------------------------------------------
 subroutine RK4_step()
 	!performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
+
+  ! REMAPPING
+  if(remapping==1 .AND.shearing==1.) then
+    call remap_stepwise()
+  end if
+
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   !_____________________k1_________________________________
   call set_ik_bar(sheartime) 
@@ -94,6 +100,7 @@ subroutine RK4_step()
                                                     +2.0_rp*state%c_k3%val&
                                                            +state%c_k4%val)
   call dealiase_all()
+	sheartime = sheartime+dt
 	state%t=state%t+dt
 	state%step=state%step+1
 end subroutine

@@ -19,8 +19,7 @@ function fu(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: temp_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
-  !if(benchmarking ==1) call cpu_time(bm_fu_starttime)
-  if(benchmarking ==1) bm_fu_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_starttime)
   !if(debuglevel .GE. 3) write(*,*) 'function fu called'
   call set_ik_bar(t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
@@ -31,8 +30,7 @@ function fu(u_f,temp_f,chem_f,t)
 
   !fu(:,:,1) = dealiase_field(fu(:,:,1))
   !fu(:,:,2) = dealiase_field(fu(:,:,2))
-  !if(benchmarking ==1) call cpu_time(bm_fu_endtime)
-  if(benchmarking ==1) bm_fu_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_endtime)
 end function 
 !----------------------------------------
 function fu_L(u_f,t)
@@ -86,8 +84,7 @@ function fu_shear(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp)                                  ,intent(in) :: t
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_shear
-  !if(benchmarking ==1) call cpu_time(bm_fu_shear_starttime)
-  if(benchmarking ==1) bm_fu_shear_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_shear_starttime)
   fu_shear(:,:,:) =cmplx(0.0_rp,0.0_rp)
   if(shearing ==1) then
     do i=0,xdim-1
@@ -104,8 +101,7 @@ function fu_shear(u_f,t)
       end do
     end do
   end if
-  !if(benchmarking ==1) call cpu_time(bm_fu_shear_endtime)
-  if(benchmarking ==1) bm_fu_shear_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_shear_endtime)
 end function
 !----------------------------------------
 function fu_diff(u_f,t)
@@ -114,14 +110,12 @@ function fu_diff(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in)          :: u_f
   real(kind = rp)                                           ,intent(in) :: t
   integer                                                               :: dir
-  !if(benchmarking ==1) call cpu_time(bm_fu_diff_starttime)
-  if(benchmarking ==1) bm_fu_diff_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_diff_starttime)
   call set_ik_bar(t)
   fu_diff(:,:,1) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,1)
   fu_diff(:,:,2) = D_visc*(state%iki_bar_sqr%val(:,:))*u_f(:,:,2)
   !note minus sign intrinsic in (i*k)**2
-  !if(benchmarking ==1) call cpu_time(bm_fu_diff_endtime)
-  if(benchmarking ==1) bm_fu_diff_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_diff_endtime)
 end function
 !----------------------------------------
 function fu_buo(u_f,temp_f,chem_f,t)
@@ -131,15 +125,10 @@ function fu_buo(u_f,temp_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)    ,intent(in) :: chem_f 
   real(kind = rp)                                  ,intent(in) :: t
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: fu_buo
-  !if(benchmarking ==1) call cpu_time(bm_fu_buo_starttime)
-  if(benchmarking ==1) bm_fu_buo_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_buo_starttime)
   fu_buo(:,:,:) =cmplx(0.0_rp,0.0_rp)
-
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-  do j=0,ydim-1
-    do i=0,xdim-1
+  do i=0,xdim-1
+    do j=0,ydim-1
         if (.NOT.(i==0.AND.j==0)) then
           !TEMPERATURE PART
           fu_buo(i,j,1) =fu_buo(i,j,1)+B_therm*&
@@ -159,10 +148,7 @@ function fu_buo(u_f,temp_f,chem_f,t)
         end if
     end do
   end do
-  !$omp end do
-  !$omp end parallel
-  !if(benchmarking ==1) call cpu_time(bm_fu_buo_endtime)
-  if(benchmarking ==1) bm_fu_buo_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_buo_endtime)
 end function
 !----------------------------------------
 function fu_Nuk(u_f,t)
@@ -176,8 +162,7 @@ function fu_Nuk(u_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: Nuk 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: div_Nuk_f
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2)            :: u
-  !if(benchmarking ==1) call cpu_time(bm_fu_Nuk_starttime)
-  if(benchmarking ==1) bm_fu_Nuk_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_Nuk_starttime)
   !IF(ANY(IsNaN(real(u_f))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in input array u_f'
   !  stop
@@ -217,35 +202,37 @@ function fu_Nuk(u_f,t)
   !  !stop
   !end if
 
-  !$omp parallel &
-  !$omp private (i,j)
-  !$omp do
-  do j=0,ydim-1 
-    do i=0,xdim-1 
+  do i=0,xdim-1 
+    do j=0,ydim-1 
         if (.NOT.(i==0.AND.j==0)) then
-          IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
-            fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
-                              *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-            fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
-                              *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-            !note minus sign resulting from i factor in ikx,iky..
-          else
-            write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
-            stop
-          end if
+        !IF(ANY(IsNaN(real(fu_Nuk(i,j,1)))))  then
+        !  write(*,*) 'func fu_Nuk(): NAN detected at pos (bef):',i,j,1
+        !  stop
+        !end if
+        !if(state%iki_bar_sqr%val(i,j).EQ.cmplx(0.0_rp,0.0_rp)) then
+        !  write(*,*) 'func fu_Nuk(): zero in k-vec NAN imminent at pos (bef):',i,j
+        !  stop
+        !end if 
+        IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
+          fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+                            *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+          fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+                            *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
+          !note minus sign resulting from i factor in ikx,iky..
+        else
+          write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
+          stop
+        end if
         end if
     end do
   end do
-  !$omp end do
-  !$omp end parallel
 
 
   !IF(ANY(IsNaN(real(fu_Nuk))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
   !  stop
   !end if
-  !if(benchmarking ==1) call cpu_time(bm_fu_Nuk_endtime)
-  if(benchmarking ==1) bm_fu_Nuk_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fu_Nuk_endtime)
 end function
 !---------------------------F_temp------------------------------------------------------------
 
@@ -256,8 +243,7 @@ function ft(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                            :: t
-  !if(benchmarking ==1) call cpu_time(bm_ft_starttime)
-  if(benchmarking ==1) bm_ft_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_starttime)
   call set_ik_bar(t)
   ft = cmplx(0.0,0.0,rp)
   ft = ft + ft_adv(u_f,temp_f,t)      !ADVECTION
@@ -268,8 +254,7 @@ function ft(u_f,temp_f,t)
   !  write(*,*) 'func ft(): all output values are zero! '
   !  !stop
   !end if
-  !if(benchmarking ==1) call cpu_time(bm_ft_endtime)
-  if(benchmarking ==1) bm_ft_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_endtime)
 end function 
 !--------------------------------------
 function ft_L(temp_f,t)
@@ -320,8 +305,7 @@ function ft_adv(u_f,temp_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  !if(benchmarking ==1) call cpu_time(bm_ft_adv_starttime)
-  if(benchmarking ==1) bm_ft_adv_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_adv_starttime)
   !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(temp_f))))  then
   !  write(*,*) 'func ft_adv(): NAN detected in input array'
   !  stop
@@ -342,16 +326,14 @@ function ft_adv(u_f,temp_f,t)
 ! advection 
  ft_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
                 +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
-  !if(benchmarking ==1) call cpu_time(bm_ft_adv_endtime)
-  if(benchmarking ==1) bm_ft_adv_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_adv_endtime)
 end function
 !--------------------------------------
 function ft_diff(temp_f)
   ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
-  !if(benchmarking ==1) call cpu_time(bm_ft_diff_starttime)
-  if(benchmarking ==1) bm_ft_diff_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_diff_starttime)
   !IF(ANY(IsNaN(real(temp_f))))  then
   !  write(*,*) 'func ft_diff(): NAN detected in input array'
   !  stop
@@ -359,8 +341,7 @@ function ft_diff(temp_f)
   !ft_diff(:,:)  = D_therm*( state%iki_sqr%val(:,:)*temp_f(:,:))
   ft_diff(:,:)  = D_therm*( state%iki_bar_sqr%val(:,:)*temp_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-  !if(benchmarking ==1) call cpu_time(bm_ft_diff_endtime)
-  if(benchmarking ==1) bm_ft_diff_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_diff_endtime)
 end function
 !--------------------------------------
 function ft_strat(u_f,temp_f)
@@ -368,11 +349,9 @@ function ft_strat(u_f,temp_f)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: temp_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: ft_strat
-  !if(benchmarking ==1) call cpu_time(bm_ft_strat_starttime)
-  if(benchmarking ==1) bm_ft_strat_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_strat_starttime)
   ft_strat(:,:)  = -S_therm*u_f(:,:,2)
-  !if(benchmarking ==1) call cpu_time(bm_ft_strat_endtime)
-  if(benchmarking ==1) bm_ft_strat_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_ft_strat_endtime)
 end function
 !---------------------------F_chem------------------------------------------------------------
 function fc(u_f,chem_f,t)
@@ -382,8 +361,7 @@ function fc(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                            :: t
-  !if(benchmarking ==1) call cpu_time(bm_fc_starttime)
-  if(benchmarking ==1) bm_fc_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_starttime)
   call set_ik_bar(t)
   fc = cmplx(0.0,0.0,rp)
   fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
@@ -394,8 +372,7 @@ function fc(u_f,chem_f,t)
   !  write(*,*) 'func fc(): all output values are zero! '
   !  !stop
   !end if
-  !if(benchmarking ==1) call cpu_time(bm_fc_endtime)
-  if(benchmarking ==1) bm_fc_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_endtime)
 end function 
 !--------------------------------------
 function fc_L(chem_f,t)
@@ -446,8 +423,7 @@ function fc_adv(u_f,chem_f,t)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,1:2),intent(in) :: u_f
   real(kind = rp),intent(in)                                   :: t
-  !if(benchmarking ==1) call cpu_time(bm_fc_adv_starttime)
-  if(benchmarking ==1) bm_fc_adv_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_adv_starttime)
   !IF(ANY(IsNaN(real(u_f))).OR.ANY(IsNaN(real(chem_f))))  then
   !  write(*,*) 'func fc_adv(): NAN detected in input array'
   !  stop
@@ -457,7 +433,7 @@ function fc_adv(u_f,chem_f,t)
   call transform(u_f(:,:,2),state%dummy%val(:,:,2),-1,shearing,t)
   call transform(chem_f,state%s_dummy%val,-1,shearing,t)
 
-  !                                            temp_f* u          (realspace)
+  !                                             chem* u          (realspace)
   state%dummy%val(:,:,1) = state%s_dummy%val(:,:)*state%dummy%val(:,:,1)
   state%dummy%val(:,:,2) = state%s_dummy%val(:,:)*state%dummy%val(:,:,2)
 
@@ -468,17 +444,14 @@ function fc_adv(u_f,chem_f,t)
 ! advection 
  fc_adv(:,:) =-( state%ikx_bar%val(:,:) * state%dummy_f%val(:,:,1)  &  
                 +state%iky_bar%val(:,:) * state%dummy_f%val(:,:,2) )
-
-  !if(benchmarking ==1) call cpu_time(bm_fc_adv_endtime)
-  if(benchmarking ==1) bm_fc_adv_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_adv_endtime)
 end function
 !--------------------------------------
 function fc_diff(chem_f)
   ! compositional diffusion term in spectral domain. iki_sqr = (ikx**2 +iky**2)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_diff
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
-  !if(benchmarking ==1) call cpu_time(bm_fc_diff_starttime)
-  if(benchmarking ==1) bm_fc_diff_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_diff_starttime)
   !IF(ANY(IsNaN(real(chem_f))))  then
   !  write(*,*) 'func fc_diff(): NAN detected in input array'
   !  stop
@@ -486,8 +459,7 @@ function fc_diff(chem_f)
   !fc_diff(:,:)  = D_comp*( state%iki_sqr%val(:,:)*chem_f(:,:))
   fc_diff(:,:)  = D_comp*( state%iki_bar_sqr%val(:,:)*chem_f(:,:))
   !Note that the minus sign is intrinsicly included by the squared (ikx**2 + iky**2)
-  !if(benchmarking ==1) call cpu_time(bm_fc_diff_endtime)
-  if(benchmarking ==1) bm_fc_diff_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_diff_endtime)
 end function
 !--------------------------------------
 function fc_strat(u_f,chem_f)
@@ -495,10 +467,8 @@ function fc_strat(u_f,chem_f)
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1,2),intent(in)   :: u_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in)     :: chem_f 
   complex(kind=rp),dimension(0:xdim-1,0:ydim-1)                :: fc_strat
-  !if(benchmarking ==1) call cpu_time(bm_fc_strat_starttime)
-  if(benchmarking ==1) bm_fc_strat_starttime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_strat_starttime)
   fc_strat(:,:)  = -S_comp*u_f(:,:,2)
-  !if(benchmarking ==1) call cpu_time(bm_fc_strat_endtime)
-  if(benchmarking ==1) bm_fc_strat_endtime=  omp_get_wtime()
+  if(benchmarking ==1) call cpu_time(bm_fc_strat_endtime)
 end function
 end module

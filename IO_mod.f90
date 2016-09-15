@@ -239,10 +239,10 @@ module IO_mod
     !  end do
     !end do
     !dummy = rearrange_2Dspectrum(deal_mask(dummy))
-    x_r_dummy%val(:,:) = real(state%u_f%val(:,:,1),real_outp_precision)
-    x_i_dummy%val(:,:) = real(aimag(state%u_f%val(:,:,1)),real_outp_precision)
-    y_r_dummy%val(:,:) = real(state%u_f%val(:,:,2),real_outp_precision)
-    y_i_dummy%val(:,:) = real(aimag(state%u_f%val(:,:,2)),real_outp_precision)
+    x_r_dummy%val(:,:) = log(real(state%u_f%val(:,:,1),real_outp_precision))
+    x_i_dummy%val(:,:) = log(real(aimag(state%u_f%val(:,:,1)),real_outp_precision))
+    y_r_dummy%val(:,:) = log(real(state%u_f%val(:,:,2),real_outp_precision))
+    y_i_dummy%val(:,:) = log(real(aimag(state%u_f%val(:,:,2)),real_outp_precision))
 
     x_r_dummy = rearrange_2Dspectrum(deal_mask(x_r_dummy))
     x_i_dummy = rearrange_2Dspectrum(deal_mask(x_i_dummy))
@@ -288,8 +288,8 @@ module IO_mod
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_chem_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
-                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
+	  			write(20,*) i,j,log(abs(real(dummy%val(i,j),real_outp_precision))),&
+                          log(abs(real(aimag(dummy%val(i,j)),real_outp_precision)))
 			end do
 		end do
     close(20)
@@ -388,8 +388,8 @@ module IO_mod
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_temp_f_remap!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
-                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
+	  			write(20,*) i,j,(abs(real(dummy%val(i,j),real_outp_precision))),&
+                          (abs(real(aimag(dummy%val(i,j)),real_outp_precision)))
 			end do
 		end do
     close(20)
@@ -420,8 +420,8 @@ module IO_mod
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_temp_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,abs(real(dummy%val(i,j),real_outp_precision)),&
-                          abs(real(aimag(dummy%val(i,j)),real_outp_precision))
+	  			write(20,*) i,j,log(abs(real(dummy%val(i,j),real_outp_precision))),&
+                          log(abs(real(aimag(dummy%val(i,j)),real_outp_precision)))
 			end do
 		end do
     close(20)

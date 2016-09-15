@@ -39,7 +39,8 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
 	integer,intent(in)		                     										:: shearing
 	integer,intent(in)		                     										:: dir
   real(kind= rp),intent(in)                                     :: time
-  if(benchmarking ==1) call cpu_time(bm_trafo_starttime)
+  !if(benchmarking ==1) call cpu_time(bm_trafo_starttime)
+  if(benchmarking ==1) bm_trafo_starttime =  omp_get_wtime()
 	if(debuglevel.GE.3) write(*,*) 'starting transform..'
 
   if(dir==1) then
@@ -110,7 +111,8 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
         else
           write(*,*) 'WARNING: sub trafo has been called with bad input parameter dir (!=(1 or -1))!'
   end if
-  if(benchmarking ==1) call cpu_time(bm_trafo_endtime)
+  !if(benchmarking ==1) call cpu_time(bm_trafo_endtime)
+  if(benchmarking ==1) bm_trafo_endtime =  omp_get_wtime()
 end subroutine
 
 end module

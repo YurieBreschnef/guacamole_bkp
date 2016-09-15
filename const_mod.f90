@@ -16,14 +16,14 @@ module const
 	integer(kind=ip),parameter		:: ydim	        = 256  
 
 	integer(kind = ip),parameter	:: seed 		    = 111111	! seed for random init
-	integer(kind = ip),parameter	:: maxfiles 	  = 80 ! maximum no of output files per type
+	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
 	integer(kind = ip),parameter	:: measure_every= 5  		  ! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 2.0_rp *pi !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 2.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 4.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 4.0_rp *pi !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 40.0_rp
+	real(kind = rp),parameter     :: tmax                      = 100.0_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
@@ -55,7 +55,7 @@ module const
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
   
-  integer(kind = ip)            :: benchmarking = 0
+  integer(kind = ip)            :: benchmarking = 1
 
   integer(kind = ip)             :: remapping = 1
   integer(kind = ip)             :: remapping_rate = 0 
@@ -72,11 +72,11 @@ module const
 
 	real(kind = rp),parameter     :: D_visc   = 0.07_rp 
 	real(kind = rp),parameter			:: D_therm  = 0.010_rp
-	real(kind = rp),parameter			:: D_comp   = 0.0005_rp
-	real(kind = rp),parameter			:: B_therm  = 4.0_rp
-	real(kind = rp),parameter			:: B_comp   = 2.0_rp
-	real(kind = rp),parameter			:: S_therm  = 4.0_rp  
-	real(kind = rp),parameter			:: S_comp   = 4.0_rp 
+	real(kind = rp),parameter			:: D_comp   = 0.0020_rp
+	real(kind = rp),parameter			:: B_therm  = 2.4_rp
+	real(kind = rp),parameter			:: B_comp   = 1.0_rp
+	real(kind = rp),parameter			:: S_therm  = 1.0_rp  
+	real(kind = rp),parameter			:: S_comp   = 2.0_rp 
 
 	!real(kind = rp),parameter     :: D_visc   = 0.0000000000014_rp 
 	!real(kind = rp),parameter			:: D_therm  = 0.00000000000020_rp

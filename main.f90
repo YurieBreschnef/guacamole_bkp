@@ -25,10 +25,12 @@ program guacamole
 
   if(debuglevel .GE.1) write(*,*) '__________________TIMESTEPPING_____________________________'
   do main_stp= 0,steps
-    if(benchmarking ==1) call cpu_time(bm_step_starttime)
+    !if(benchmarking ==1) call cpu_time(bm_step_starttime)
+    if(benchmarking ==1) bm_step_starttime=  omp_get_wtime()
 
     ! STATISTICS WRITING----------------------------------------------------------------------
-    if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
+    !if(benchmarking ==1) call cpu_time(bm_statwrite_starttime)
+    if(benchmarking ==1) bm_statwrite_starttime=  omp_get_wtime()
       if(mod(state%step,(measure_every)).EQ.0) then
         call transform(state%u_f%val(:,:,1),state%u%val(:,:,1),-1,shearing,sheartime)
         call transform(state%u_f%val(:,:,2),state%u%val(:,:,2),-1,shearing,sheartime)
@@ -40,19 +42,24 @@ program guacamole
         call write_C_stat()
         call write_sys_stat()
       end if 
-    if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
+    !if(benchmarking ==1) call cpu_time(bm_statwrite_endtime)
+    if(benchmarking ==1) bm_statwrite_endtime=  omp_get_wtime()
     ! ----------------------------------------------------------------------------------------
 
 
     ! FILE WRITING----------------------------------------------------------------------------
-    if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
-    if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+    !if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
+    if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
+    !if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+    if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
       if(state%t > last_written) then
-        if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
+        !if(benchmarking ==1) call cpu_time(bm_filewrite_starttime)
+        if(benchmarking ==1) bm_filewrite_starttime=  omp_get_wtime()
         call write_all()
         !write(*,*) 'MAXVAL:', maxval(real(state%u%val(:,:,:,1)))
         last_written = last_written+write_intervall
-        if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+        !if(benchmarking ==1) call cpu_time(bm_filewrite_endtime)
+        if(benchmarking ==1) bm_filewrite_endtime=  omp_get_wtime()
       end if 
     ! ----------------------------------------------------------------------------------------
 
@@ -68,17 +75,23 @@ program guacamole
 
 
     ! TIMESTEPPING ---------------------------------------------------------------------------
-    if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
+    !if(benchmarking ==1) call cpu_time(bm_timestepping_starttime)
+    if(benchmarking ==1) bm_timestepping_starttime=  omp_get_wtime()
       !call RK4_adjust_dt()
       !call RK4_step()
       call euler_step()
       !call div_tester()
       !call ETD2_step()
-    if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
+    !if(benchmarking ==1) call cpu_time(bm_timestepping_endtime)
+    if(benchmarking ==1) bm_timestepping_endtime=  omp_get_wtime()
     ! ----------------------------------------------------------------------------------------
-    if(benchmarking ==1) call cpu_time(bm_step_endtime)
+    !if(benchmarking ==1) call cpu_time(bm_step_endtime)
+    if(benchmarking ==1) bm_step_endtime=  omp_get_wtime()
+
     !BENCHMARKING------------------------------------
-    !if(benchmarking ==1) call bm_evaluate(.true.)
+  	!if(mod(state%step-1,(steps/1000)).EQ.0) then
+    if(benchmarking ==1) call bm_evaluate(.true.)
+    !end if
   end do
 
   if(debuglevel <= 1) write(*,*) '__________________END OF TIMESTEPPING______________________'
