@@ -12,8 +12,8 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 256 
-	integer(kind=ip),parameter		:: ydim	        = 256  
+	integer(kind=ip),parameter		:: xdim	        = 512 
+	integer(kind=ip),parameter		:: ydim	        = 512   
 
 	integer(kind = ip),parameter	:: seed 		    = 111111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
@@ -22,8 +22,8 @@ module const
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 4.0_rp *pi !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 4.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 16.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 16.0_rp *pi !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 100.0_rp
+	real(kind = rp),parameter     :: tmax                      = 200.0_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
