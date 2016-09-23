@@ -16,7 +16,7 @@ module trafo
   end subroutine
 
   function dealiase_field(arr_f)
-    !dealiase a scalar field by 2/3rd rule
+    !dealiase a scalar field by 1/3rd rule (discard highest 1/3rd of spectrum)
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in) :: arr_f
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: dealiase_field
     dealiase_field = arr_f

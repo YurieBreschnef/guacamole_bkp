@@ -26,7 +26,7 @@ function fu(u_f,temp_f,chem_f,t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
   !fu(:,:,1) = dealiase_field(fu(:,:,1))
@@ -100,6 +100,9 @@ function fu_shear(u_f,t)
              fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
+          else
+             fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
+             fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
           end if
       end do
     end do
@@ -156,6 +159,9 @@ function fu_buo(u_f,temp_f,chem_f,t)
 
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
           !note the minus signs within ik- variables
+          else
+            fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
+            fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
         end if
     end do
   end do
@@ -233,6 +239,9 @@ function fu_Nuk(u_f,t)
             write(*,*) 'func fu_Nuk(): NAN detected (before 1.0_rp/iki_bar_sqr)at  at pos:',i,j
             stop
           end if
+        else 
+          fu_Nuk(i,j,1) =Nuk_f(i,j,1)
+          fu_Nuk(i,j,2) =Nuk_f(i,j,2)
         end if
     end do
   end do

@@ -239,10 +239,10 @@ module IO_mod
     !  end do
     !end do
     !dummy = rearrange_2Dspectrum(deal_mask(dummy))
-    x_r_dummy%val(:,:) = log(real(state%u_f%val(:,:,1),real_outp_precision))
-    x_i_dummy%val(:,:) = log(real(aimag(state%u_f%val(:,:,1)),real_outp_precision))
-    y_r_dummy%val(:,:) = log(real(state%u_f%val(:,:,2),real_outp_precision))
-    y_i_dummy%val(:,:) = log(real(aimag(state%u_f%val(:,:,2)),real_outp_precision))
+    x_r_dummy%val(:,:) = log(abs(real(state%u_f%val(:,:,1),real_outp_precision)))
+    x_i_dummy%val(:,:) = log(abs(real(aimag(state%u_f%val(:,:,1)),real_outp_precision)))
+    y_r_dummy%val(:,:) = log(abs(real(state%u_f%val(:,:,2),real_outp_precision)))
+    y_i_dummy%val(:,:) = log(abs(real(aimag(state%u_f%val(:,:,2)),real_outp_precision)))
 
     x_r_dummy = rearrange_2Dspectrum(deal_mask(x_r_dummy))
     x_i_dummy = rearrange_2Dspectrum(deal_mask(x_i_dummy))
@@ -253,10 +253,10 @@ module IO_mod
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,abs(real(x_r_dummy%val(i,j),real_outp_precision)),&    !3: real(u_x)
-                          abs(real(x_i_dummy%val(i,j),real_outp_precision)),&    !4: imag(u_x)
-                          abs(real(y_r_dummy%val(i,j),real_outp_precision)),&    !5: real(u_y)
-                          abs(real(y_i_dummy%val(i,j),real_outp_precision))      !6: imag(u_y)
+	  			write(20,*) i,j,real(x_r_dummy%val(i,j),real_outp_precision),&    !3: real(u_x)
+                          real(x_i_dummy%val(i,j),real_outp_precision),&    !4: imag(u_x)
+                          real(y_r_dummy%val(i,j),real_outp_precision),&    !5: real(u_y)
+                          real(y_i_dummy%val(i,j),real_outp_precision)      !6: imag(u_y)
 			end do
 		end do
     close(20)
