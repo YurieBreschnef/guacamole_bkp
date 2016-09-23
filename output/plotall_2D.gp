@@ -3,8 +3,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 32 
-Ly = 32  
+Lx = 4.0*3.14159 
+Ly = 4.0*3.14159  
 #Lx = 8 
 #Ly = 8  
 
@@ -198,8 +198,8 @@ do for [i=0:no_of_img] {
     set output './visual/spec_inspect_combo/'.i.'.png'
   	set multiplot layout 3,3
 
-    unset tics
-    unset colorbox
+    #unset tics
+    #unset colorbox
     #unset border 
   	set title 'temperature field'
     plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
