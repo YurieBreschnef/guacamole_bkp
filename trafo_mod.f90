@@ -20,10 +20,10 @@ module trafo
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in) :: arr_f
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: dealiase_field
     dealiase_field = arr_f
-    do i=xdim/3,2*(xdim/3)
+    do i=xdim/3-1,2*(xdim/3)+1
 		  dealiase_field(i,:) = cmplx(0.0_rp,0.0_rp,rp)
 	  end do
-    do j=ydim/3,2*(ydim/3)
+    do j=ydim/3-1,2*(ydim/3)+1
 		  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
 	  end do	
 end function

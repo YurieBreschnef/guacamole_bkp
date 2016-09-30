@@ -26,7 +26,7 @@ function fu(u_f,temp_f,chem_f,t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
   !fu(:,:,1) = dealiase_field(fu(:,:,1))
@@ -101,8 +101,8 @@ function fu_shear(u_f,t)
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
              !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
           else
-             fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
-             fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
+             fu_shear(0,0,1) = -shear*state%u_f%val(i,j,2)
+             fu_shear(0,0,2) = cmplx(0.0_rp,0.0_rp)
           end if
       end do
     end do
@@ -159,6 +159,7 @@ function fu_buo(u_f,temp_f,chem_f,t)
 
           fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
           !note the minus signs within ik- variables
+          ! minus signs equalise above and below fraction (ik*ik)/ik^2
           else
             fu_buo(i,j,2) =fu_buo(i,j,2)+B_therm*temp_f(i,j)
             fu_buo(i,j,2) =fu_buo(i,j,2)-B_comp*chem_f(i,j)
@@ -395,9 +396,9 @@ function fc(u_f,chem_f,t)
   if(benchmarking ==1) bm_fc_starttime=  omp_get_wtime()
   call set_ik_bar(t)
   fc = cmplx(0.0,0.0,rp)
-  fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
-  fc = fc + fc_diff(chem_f)           !DIFFUSION
-  fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
+  !fc = fc + fc_adv(u_f,chem_f,t)      !ADVECTION
+  !fc = fc + fc_diff(chem_f)           !DIFFUSION
+  !fc = fc + fc_strat(u_f,chem_f)      !BACKGROUND STRATIFICATION
   !fc = dealiase_field(fc)
   !IF(ALL(fc ==cmplx(0.0_rp,0.0,rp)))  then
   !  write(*,*) 'func fc(): all output values are zero! '

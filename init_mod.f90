@@ -187,16 +187,16 @@ module init
     !    state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
     !  end do
     !end do
-    do i=0,xdim-1
-      do j=0,ydim-1
-        amp = rand()
-        state%u%val(i,j,1) = real((amp-0.5_rp),rp)
-        amp = rand()
-        state%u%val(i,j,2) = real((amp-0.5_rp),rp)
-      end do
-    end do
+    !do i=0,xdim-1
+    !  do j=0,ydim-1
+    !    amp = rand()
+    !    state%u%val(i,j,1) = real((amp-0.5_rp),rp)
+    !    amp = rand()
+    !    state%u%val(i,j,2) = real((amp-0.5_rp),rp)
+    !  end do
+    !end do
 
-    state%u%val = state%u%val *0.0000001_rp                             
+    state%u%val = state%u%val *0.00001_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val = state%u_f%val/real(xdim*ydim,rp)   !FFTW NORM
