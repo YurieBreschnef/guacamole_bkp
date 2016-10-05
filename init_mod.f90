@@ -19,6 +19,7 @@ module init
   	state%step    = 0
     T_rm          = real(Lx/(shear*Ly),rp) /2.0
     threads = omp_get_max_threads ( )     ! find out on how many threads this prog is running
+    !threads = 1
     my_thread_id= omp_get_thread_num ( )
     write ( *, '(a,i8)' ) 'The number of processors available = ', omp_get_num_procs ( )
     write ( *, '(a,i8)' ) 'The number of threads available    = ', threads 

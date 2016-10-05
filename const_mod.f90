@@ -32,7 +32,7 @@ module const
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter     :: tmax                      = 50.0_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-2_rp
+	real(kind = rp)					      :: dt 	                     = 1.0e-4_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -70,8 +70,8 @@ module const
   integer(kind = ip)             :: my_y_end
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.035_rp 
-	real(kind = rp),parameter			:: D_therm  = 0.0010_rp
+	real(kind = rp),parameter     :: D_visc   = 0.07_rp 
+	real(kind = rp),parameter			:: D_therm  = 0.010_rp
 	real(kind = rp),parameter			:: D_comp   = 0.0002_rp
 
 	real(kind = rp),parameter			:: B_therm  = 1.0_rp
