@@ -35,10 +35,6 @@ end subroutine
 subroutine RK4_step()
 	!performs a timestep with RK4 and stores the new result in u_f,temp_f,chem_f
 
-  ! REMAPPING
-  if(remapping==1 .AND.shearing==1.) then
-    call remap_stepwise()
-  end if
 
   if(debuglevel .GE.3) write(*,*)'RK4 sub called'
   !_____________________k1_________________________________
@@ -99,9 +95,16 @@ subroutine RK4_step()
                                                     +2.0_rp*state%c_k2%val&
                                                     +2.0_rp*state%c_k3%val&
                                                            +state%c_k4%val)
-  call dealiase_all()
 	sheartime = sheartime+dt
 	state%t=state%t+dt
+
+  call dealiase_all()
+  ! REMAPPING
+  if(remapping==1 .AND.shearing==1.) then
+    call remap_stepwise()
+  end if
+  call dealiase_all()
+
 	state%step=state%step+1
 end subroutine
 !------------------------------------------------------------------------------------------
@@ -123,7 +126,6 @@ subroutine euler_step()
   state%temp_f%val = state_np1%temp_f%val
   state%chem_f%val = state_np1%chem_f%val
   call dealiase_all()
-
 
 	sheartime = sheartime+dt
 	state%t   = state%t+dt

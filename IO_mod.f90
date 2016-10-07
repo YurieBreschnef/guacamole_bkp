@@ -562,10 +562,10 @@ module IO_mod
   	max_abs = cmplx(maxval(abs(real(u_f%val))),maxval(abs(real((aimag(u_f%val))))),rp)
   	deal_mask%val = u_f%val
 
-  	deal_mask%val(xdim/3  ,:        ) 	= max_abs			
-  	deal_mask%val(2*xdim/3,:        ) 	= max_abs			
-  	deal_mask%val(:       ,2*ydim/3 ) 	= max_abs			
-  	deal_mask%val(:       ,ydim/3   ) 	= max_abs
+  	deal_mask%val(xdim/3 ,:           ) 	= max_abs			
+  	deal_mask%val(2*xdim/3+1,:        ) 	= max_abs			
+  	deal_mask%val(:       ,2*ydim/3+1 ) 	= max_abs			
+  	deal_mask%val(:       ,ydim/3     ) 	= max_abs
   end function 
 
   function rearrange_2Dspectrum(arr_f)

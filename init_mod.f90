@@ -200,6 +200,7 @@ module init
     state%u%val = state%u%val *0.00001_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
+    state%u_f%val(0,0,:) = cmplx(0.0_rp,0.0_rp)        ! set constant mode to zero 
     state%u_f%val = state%u_f%val/real(xdim*ydim,rp)   !FFTW NORM
     if(debuglevel .GE. 1) write(*,*) '  -done with init_u.'
   end subroutine
@@ -252,7 +253,7 @@ module init
         end do
       end do
     end do
-    state%temp%val = state%temp%val*0.10_rp
+    state%temp%val = state%temp%val*0.00010_rp
 
     state%temp_f%val(0,0) = cmplx(0.0_rp,0.0_rp,rp)
     call dfftw_execute_dft(full2D,state%temp%val(:,:),state%temp_f%val(:,:))
@@ -303,7 +304,7 @@ module init
         end do
       end do
     end do
-    state%chem%val = state%chem%val * 0.10_rp
+    state%chem%val = state%chem%val * 0.00010_rp
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
     state%chem_f%val = state%chem_f%val/real(xdim*ydim,rp)   !FFTW NORM

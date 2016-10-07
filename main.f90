@@ -4,7 +4,7 @@ program guacamole
   !from IO_module.
 
   !use omp_lib
-  !use iso_c_binding
+  use iso_c_binding
   use plans
   use sys_state
   use init
