@@ -33,6 +33,7 @@ module IO_mod
     call write_u_stat()     ! u-relatetd measures
     call write_E_stat()     ! Energy related measures
     call write_sys_stat()   ! System wide measures
+    call write_k()   ! write time dependend k's
 
     !if(debuglevel <= 2) write(*,*) '-done with write_all.'
   end subroutine
@@ -239,10 +240,10 @@ module IO_mod
     !  end do
     !end do
     !dummy = rearrange_2Dspectrum(deal_mask(dummy))
-    x_r_dummy%val(:,:) = log(abs(real(state%u_f%val(:,:,1),real_outp_precision)))
-    x_i_dummy%val(:,:) = log(abs(real(aimag(state%u_f%val(:,:,1)),real_outp_precision)))
-    y_r_dummy%val(:,:) = log(abs(real(state%u_f%val(:,:,2),real_outp_precision)))
-    y_i_dummy%val(:,:) = log(abs(real(aimag(state%u_f%val(:,:,2)),real_outp_precision)))
+    x_r_dummy%val(:,:) = (abs(real(state%u_f%val(:,:,1),real_outp_precision)))
+    x_i_dummy%val(:,:) = (abs(real(aimag(state%u_f%val(:,:,1)),real_outp_precision)))
+    y_r_dummy%val(:,:) = (abs(real(state%u_f%val(:,:,2),real_outp_precision)))
+    y_i_dummy%val(:,:) = (abs(real(aimag(state%u_f%val(:,:,2)),real_outp_precision)))
 
     x_r_dummy = rearrange_2Dspectrum(deal_mask(x_r_dummy))
     x_i_dummy = rearrange_2Dspectrum(deal_mask(x_i_dummy))
@@ -422,6 +423,34 @@ module IO_mod
 	    	do j=0,ydim-1
 	  			write(20,*) i,j,log(abs(real(dummy%val(i,j),real_outp_precision))),&
                           log(abs(real(aimag(dummy%val(i,j)),real_outp_precision)))
+			end do
+		end do
+    close(20)
+  end subroutine
+
+  subroutine write_k()
+    ! write time dependend k-values to file
+    integer                             :: io_error = 0
+    type(kfield)                        :: kdummy,kbardummy
+		character(len=1024) 		  					:: filename
+		character(len=50) 		  						:: suffix
+		character(len=16),parameter					:: path ='./output/data/k/'
+		write(suffix,"(I5,A6)")  int(state%t/write_intervall), ".k.dat"
+    suffix = trim(adjustl(suffix))
+    filename = path //suffix
+		filename = adjustl(filename)
+		filename = trim(filename)
+
+
+		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
+    if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_k!'
+		  do i=0,xdim-1
+	    	do j=0,ydim-1
+	  			write(20,*) i,j,aimag(state%ikx%val(i,j))&   !1 kx
+                         ,aimag(state%iky%val(i,j))&   !2 ky
+                         ,aimag(state%ikx_bar%val(i,j))&   !2 ky_bar
+                         ,aimag(state%iky_bar%val(i,j))   !2 ky_bar
+                          
 			end do
 		end do
     close(20)

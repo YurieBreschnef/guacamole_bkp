@@ -12,12 +12,12 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 128 
-	integer(kind=ip),parameter		:: ydim	        = 128   
+	integer(kind=ip),parameter		:: xdim	        = 512 
+	integer(kind=ip),parameter		:: ydim	        = 512    
 
 	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
-	integer(kind = ip),parameter	:: maxfiles 	  = 200 ! maximum no of output files per type
-	integer(kind = ip),parameter	:: measure_every= 100 ! measure diagnostics every X steps
+	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
+	integer(kind = ip),parameter	:: measure_every= 10 ! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 5.1_rp
+	real(kind = rp),parameter     :: tmax                      = 20.0_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
@@ -50,15 +50,15 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = .000_rp
-  integer(kind = ip)            :: shearing = 0
+	real(kind = rp)               :: shear    = 1.000_rp
+  integer(kind = ip)            :: shearing = 1 
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
   
   integer(kind = ip)            :: benchmarking = 0
 
   integer(kind = ip)             :: remapping = 1
-  integer(kind = ip)             :: remapping_rate = 10 
+  integer(kind = ip)             :: remapping_rate = 1 
 
 
   integer(kind = ip)             :: threads   = 0 
@@ -70,7 +70,8 @@ module const
   integer(kind = ip)             :: my_y_end
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.070_rp 
+	real(kind = rp),parameter     :: D_visc   = 0.001_rp 
+
 	real(kind = rp),parameter			:: D_therm  = 0.010_rp
 	real(kind = rp),parameter			:: D_comp   = 0.001_rp
 

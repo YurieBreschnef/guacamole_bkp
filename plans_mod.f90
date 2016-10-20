@@ -9,10 +9,14 @@ module plans
 	integer( kind= 8)										      :: y_yf				! analog
 	integer( kind= 8)										      :: yf_y
 
+	integer( kind= 8)										      :: y_yf2				! analog
+	integer( kind= 8)										      :: yf_y2
+
 	integer( kind= 8)										      :: full2D
 	integer( kind= 8)										      :: ifull2D
 
   complex(kind = rp),dimension(0:xdim-1)		:: x_pen,x_pen_f	! 1D pencil in x-dir
-  complex(kind = rp),dimension(0:ydim-1)		:: y_pen,y_pen_f	! 1D pencil in x-dir
+  complex(kind = rp),dimension(0:ydim-1)		:: y_pen,y_pen_f	! 1D pencil in y-dir
+  complex(kind = rp),dimension(0:(2*ydim)-1):: y_pen2,y_pen_f2	! 1D pencil in y-dir (zero padded)
 
 end module

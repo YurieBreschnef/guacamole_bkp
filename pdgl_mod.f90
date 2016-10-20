@@ -26,7 +26,7 @@ function fu(u_f,temp_f,chem_f,t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
   fu(0,0,:) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero
@@ -72,7 +72,7 @@ function fu_N(u_f,temp_f,chem_f,t)
   call set_ik_bar(t)
   fu_N = cmplx(0.0_rp,0.0_rp,rp)
   fu_N = fu_N + fu_Nuk(u_f,t)                 !Nonlinear part
-  fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu_N = fu_N + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   if(shearing==1) then
     fu_N = fu_N + fu_shear(u_f,t)               !SHEAR
   end if
@@ -97,11 +97,12 @@ function fu_shear(u_f,t)
           if (.NOT.((i==0).AND.(j==0))) then
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
-             fu_shear(i,j,1) = fu_shear(i,j,1)+2.0_rp*((state%ikx_bar%val(i,j)*state%ikx_bar%val(i,j))&
+
+             fu_shear(i,j,1) = fu_shear(i,j,1)+2.0_rp*((state%ikx_bar%val(i,j)*state%ikx%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
-             fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx_bar%val(i,j))&
+             fu_shear(i,j,2) = fu_shear(i,j,2)+2.0_rp*((state%iky_bar%val(i,j)*state%ikx%val(i,j))&
                                           /state%iki_bar_sqr%val(i,j))*shear*state%u_f%val(i,j,2)
-             !NOTE: minus sign is due to imag included in ikx,iky and their multiplikation
+             !NOTE: minus sign chancels  due to imag included in ikx,iky and their multiplikation +div
           else
              fu_shear(i,j,1) = -shear*state%u_f%val(i,j,2)
              fu_shear(i,j,2) = cmplx(0.0_rp,0.0_rp)
@@ -205,7 +206,7 @@ function fu_Nuk(u_f,t)
   call transform(u_f(:,:,2),u(:,:,2),-1,shearing,t)
 
   !do crossproduct
-  Nuk = -crossp(omega,u)
+  Nuk = crossp(omega,u)
   !IF(ANY(IsNaN(real(Nuk))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in Nuk after crossp in realspace'
   !  stop
@@ -233,9 +234,9 @@ function fu_Nuk(u_f,t)
     do i=0,xdim-1 
         if (.NOT.((i==0).AND.(j==0))) then
           IF(.NOT.(IsNaN(real(1.0_rp/state%iki_bar_sqr%val(i,j)))))  then
-            fu_Nuk(i,j,1) =Nuk_f(i,j,1)-state%ikx_bar%val(i,j)&
+            fu_Nuk(i,j,1) =-Nuk_f(i,j,1)+state%ikx_bar%val(i,j)&
                               *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
-            fu_Nuk(i,j,2) =Nuk_f(i,j,2)-state%iky_bar%val(i,j)&
+            fu_Nuk(i,j,2) =-Nuk_f(i,j,2)+state%iky_bar%val(i,j)&
                               *div_Nuk_f(i,j)/state%iki_bar_sqr%val(i,j)
             !note minus sign resulting from i factor in ikx,iky..
           else

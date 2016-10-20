@@ -17,7 +17,7 @@ module init
   	dt_2 	        = dt/2.0_rp
   	steps       	= int(tmax/dt,ip)
   	state%step    = 0
-    T_rm          = real(Lx/(shear*Ly),rp) /2.0
+    T_rm          = real(Lx/(shear*Ly),rp)
     threads = omp_get_max_threads ( )     ! find out on how many threads this prog is running
     !threads = 1
     my_thread_id= omp_get_thread_num ( )
@@ -153,9 +153,11 @@ module init
 
   	call dfftw_plan_dft_1d( x_xf,xdim,x_pen	,x_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
   	call dfftw_plan_dft_1d( y_yf,ydim,y_pen	,y_pen_f,FFTW_FORWARD ,fftw_plan_thoroughness)
+  	call dfftw_plan_dft_1d( y_yf2,2*ydim,y_pen2	,y_pen_f2,FFTW_FORWARD ,fftw_plan_thoroughness)
 
   	call dfftw_plan_dft_1d( xf_x,xdim,x_pen_f	,x_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
   	call dfftw_plan_dft_1d( yf_y,ydim,y_pen_f	,y_pen,FFTW_BACKWARD,fftw_plan_thoroughness)
+  	call dfftw_plan_dft_1d( yf_y2,2* ydim,y_pen_f2	,y_pen2,FFTW_BACKWARD,fftw_plan_thoroughness)
 
   	call dfftw_plan_dft_2d(ifull2D,xdim,ydim,state%temp_f%val,state%temp%val,  &
       FFTW_BACKWARD,fftw_plan_thoroughness)
@@ -171,8 +173,8 @@ module init
     !initialize velocity field 
     if(debuglevel .GE. 1) write(*,*) '  -calling init_u()'
     state%u%val = cmplx(0.0_rp,0.0_rp,rp)
-    xmodes = 2 !xdim/2
-    ymodes = 2 !ydim/16 
+    xmodes = 1 !xdim/2
+    ymodes = 1 !ydim/2
 
     ! source in the middle of the field
     !do i=0,xdim-1
@@ -188,16 +190,16 @@ module init
     !    state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
     !  end do
     !end do
-    !do i=0,xdim-1
-    !  do j=0,ydim-1
-    !    amp = rand()
-    !    state%u%val(i,j,1) = real((amp-0.5_rp),rp)
-    !    amp = rand()
-    !    state%u%val(i,j,2) = real((amp-0.5_rp),rp)
-    !  end do
-    !end do
+    do i=0,xdim-1
+      do j=0,ydim-1
+        amp = rand()
+        state%u%val(i,j,1) = real((amp-0.5_rp),rp)
+        amp = rand()
+        state%u%val(i,j,2) = real((amp-0.5_rp),rp)
+      end do
+    end do
 
-    state%u%val = state%u%val *0.00001_rp                             
+    state%u%val = state%u%val *0.1_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val(0,0,:) = cmplx(0.0_rp,0.0_rp)        ! set constant mode to zero 
@@ -213,6 +215,10 @@ module init
     !initialize temp field 
     state%temp%val = cmplx(0.0_rp,0.0_rp,rp)
     state%temp_f%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%t_k1%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%t_k2%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%t_k3%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%t_k4%val = cmplx(0.0_rp,0.0_rp,rp)
 
     xpoints = 2 
     ypoints = 2
@@ -269,41 +275,48 @@ module init
     integer                                         ::xpoints,ypoints
     real(kind=rp)                                   ::amp
     if(debuglevel .GE. 1) write(*,*) '  -calling init_chem()'
+
     !initialize chemical field 
     state%chem%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%chem_f%val = cmplx(0.0_rp,0.0_rp,rp)
 
-    xpoints = 3 
-    ypoints = 3
-    do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
-      do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
-      amp = (rand())
-        do i=0,xdim-1
-          do j=0,ydim-1
-              state%chem%val(i,j) = state%chem%val(i,j) &
-              +cmplx((amp-0.5_rp)*exp(-( (30.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
-                           +(30.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
+    state%c_k1%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%c_k2%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%c_k3%val = cmplx(0.0_rp,0.0_rp,rp)
+    state%c_k4%val = cmplx(0.0_rp,0.0_rp,rp)
 
-!              amp = (rand()-0.5_rp)
-!              state%chem%val(i,j) = amp
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+    !xpoints = 3 
+    !ypoints = 3
+    !do xpos=xdim/xpoints,(xpoints-1)*xdim/xpoints,xdim/xpoints
+    !  do ypos=ydim/ypoints,(ypoints-1)*ydim/ypoints,ydim/ypoints
+    !  amp = (rand())
+    !    do i=0,xdim-1
+    !      do j=0,ydim-1
+    !          state%chem%val(i,j) = state%chem%val(i,j) &
+    !          +cmplx((amp-0.5_rp)*exp(-( (30.0_rp*real(j-ypos,rp)/real(ydim,rp))**2 &
+    !                       +(30.0_rp*real(i-xpos,rp)/real(xdim,rp))**2) ),0.0_rp,rp)
 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
-              !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+    !          !amp = (rand()-0.5_rp)
+    !          !state%chem%val(i,j) = amp
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/2)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(i)/real(xdim)*2.0_rp*pi*(xdim/4)) 
 
-          end do
-        end do
-      end do
-    end do
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  sin(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/2)) 
+    !          !state%chem%val(i,j) =  state%chem%val(i,j)+  cos(real(j)/real(ydim)*2.0_rp*pi*(ydim/4)) 
+
+    !      end do
+    !    end do
+    !  end do
+    !end do
     state%chem%val = state%chem%val * 0.0010_rp
 
     call dfftw_execute_dft(full2D,state%chem%val(:,:),state%chem_f%val(:,:))
@@ -322,20 +335,17 @@ module init
           else
             state%ikx%val(i,:) = cmplx(0.0_rp,(pi*2.0_rp*real(i-xdim,rp)/Lx),rp)
           end if
-
           if(j<=ydim/2)then   !ky
             state%iky%val(:,j) = cmplx(0.0_rp,(pi*2.0_rp*real(j,rp)/Ly),rp)
           else
             state%iky%val(:,j) = cmplx(0.0_rp,(pi*2.0_rp*real(j-ydim,rp)/Ly),rp)
           end if
-
       end do
     end do
      IF(ALL(state%ikx%val ==0.0_rp).OR.ALL(state%iky%val ==0.0_rp))  then
        write(*,*) 'sub init_k(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
        stop
      end if
-
 
     state%ikx_sqr%val = state%ikx%val**2
     state%ikx_sqr%val(0,:) = epsilon(1.0_rp)
@@ -351,7 +361,7 @@ module init
     state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
     state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
 
-    ! used for crossprodukt in fu_Nuk in module pdgl
+    ! used for crossproduct in fu_Nuk in module pdgl
     state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
     state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
 

@@ -161,8 +161,8 @@ contains
       state%ikx_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2
       state%iky_bar_sqr%val(:,:) = state%iky_bar%val(:,:)**2
       state%iki_bar_sqr%val(:,:) = state%ikx_bar%val(:,:)**2 + state%iky_bar%val(:,:)**2
-      state%k_vec%val(:,:,1) = real(imag*state%ikx_bar%val(:,:),rp)
-      state%k_vec%val(:,:,2) = real(imag*state%iky_bar%val(:,:),rp)
+      state%k_vec%val(:,:,1) = real(state%ikx_bar%val(:,:),rp)
+      state%k_vec%val(:,:,2) = real(state%iky_bar%val(:,:),rp)
     end if
 
 

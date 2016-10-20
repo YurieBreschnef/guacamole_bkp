@@ -16,7 +16,7 @@ module trafo
   end subroutine
 
   function dealiase_field(arr_f)
-    !dealiase a scalar field by 1/3rd rule (discard highest 1/3rd of spectrum)
+    !dealiase a scalar field by 2/3rd rule
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1),intent(in) :: arr_f
   	complex(kind=rp),dimension(0:xdim-1,0:ydim-1)            :: dealiase_field
     dealiase_field = arr_f
@@ -59,7 +59,7 @@ subroutine transform(in_arr,out_arr,dir,shearing,time)
               !write ( *, * ) 'thread',my_thread_id,'transforming xpencil no:',j
 	          	if(debuglevel.GE.3) write(*,*) 'transforming x-pencil number!:', j	
 	          	x_pen = in_arr(:,j)										
-              	call dfftw_execute_dft(x_xf,x_pen,x_pen_f)		
+              	call dfftw_execute_dft(x_xf,x_pen, x_pen_f)		
 	          	out_arr(:,j) = x_pen_f/real(xdim,rp)		
 	          end do	
             !$omp end do

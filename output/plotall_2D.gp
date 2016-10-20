@@ -3,8 +3,8 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 4.0*3.14159 
-Ly = 4.0*3.14159  
+Lx = 2.0*3.14159 
+Ly = 2.0*3.14159  
 #Lx = 8 
 #Ly = 8  
 
@@ -41,7 +41,7 @@ no_of_img = 299
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
     set multiplot layout 4,2
-   #set xrange [0.0:4.0]
+  set xrange [0.2:10.0]
 
         set title 'simulation time vs.Temperature measures [arb]'
         plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
@@ -82,11 +82,20 @@ no_of_img = 299
 
 
 do for [i=0:no_of_img] {
+    unset xrange
+    unset yrange
+    unset size
+
+    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
+  	set output './visual/k/'.i.'.png'
+  	set title 'k-values'
+      	plot './data/k/'.i.'.k.dat' using 3:4  title "k", \
+      	     './data/k/'.i.'.k.dat' using 5:6  title "k_bar"
     set xrange [0:Lx]
     set yrange [0:Ly]
     set size ratio aspect_ratio 
 
-   set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
+
 #
 #  	set output './visual/temp/'.i.'.png'
 #  	set title 'temperature field'
@@ -194,42 +203,55 @@ do for [i=0:no_of_img] {
 		unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
-    set terminal pngcairo size 1200,1200 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1200,900 enhanced font 'Verdana,10'
     set output './visual/spec_inspect_combo/'.i.'.png'
   	set multiplot layout 3,3
 
-    #unset tics
-    #unset colorbox
-    #unset border 
-  	set title 'temperature field'
-    plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
-  	#set title 'Real part of fourier spectrum of temp field'
-   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image notitle
-  	set title 'Imag part of fourier spectrum of temp field'
-   	plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:4  with image notitle
-  	set title 'real cutof part of fourier spectrum of temp field'
-   	plot './data/temp_f_remap/'.i.'.temp_f_remap.dat' using 1:2:4  with image notitle
+    unset tics
+    unset colorbox
+    unset border 
 
-  	set title 'chemical field'
-   	plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image notitle
-  	set title 'Real part of fourier spectrum of chem field'
-   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
+    #set size ratio aspect_ratio 
+  	#set title 'temperature field'
+    #plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
+  	#set title 'log of Real part of fourier spectrum of temp field'
+   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image notitle
+  	#set title 'log of Imag part of fourier spectrum of temp field'
+   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:4  with image notitle
+  	#set title 'real cutof part of fourier spectrum of temp field'
+   	#plot './data/temp_f_remap/'.i.'.temp_f_remap.dat' using 1:2:4  with image notitle
+
+  	#set title 'chemical field'
+   	#plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image notitle
+  	#set title 'log of Real part of fourier spectrum of chem field'
+   	#plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
   	#set title 'Imag part of fourier spectrum of chem field'
    	#plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:4 with image notitle
-  	set title 'real cutof part of fourier spectrum of chem  field'
-   	plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
+  	#set title 'log of real cutof part of fourier spectrum of chem  field'
+   	#plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
 
+    unset cbrange
+  	set title 'u_x velocity field'
+   	plot './data/u/'.i.'.u.dat' using 1:2:3 with image notitle
+    #set cbrange [-100.0:-10.0]
+  	set title 'log of Real part of fourier transform of u_x '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
+  	set title 'log of Imag part of fourier transform of u_x '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
+
+    unset cbrange
+  	set title 'u_y velocity field'
+   	plot './data/u/'.i.'.u.dat' using 1:2:4 with image notitle
+
+    #set cbrange [-100.0:-10.0]
+  	set title 'log of Real part of fourier transform of u_y '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
+  	set title 'log of Imag part of fourier transform of u_y '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
+
+    unset cbrange
   	set title 'absolute magnitude  of velocity field'
    	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
-  	set title 'Real part of fourier transform of u_x '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
-  	#set title 'Imag part of fourier transform of u_x '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
-  	set title 'Real part of fourier transform of u_y '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
-  	#set title 'Imag part of fourier transform of u_y '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
-
 
   	unset multiplot
     unset size
