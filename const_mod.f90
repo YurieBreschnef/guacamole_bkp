@@ -31,8 +31,8 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 1.5_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
+	real(kind = rp),parameter     :: tmax                      = 10.0_rp
+	real(kind = rp)					      :: dt 	                     = 1.0e-2_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
