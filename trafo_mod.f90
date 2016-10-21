@@ -26,6 +26,25 @@ module trafo
     do j=ydim/3,2*(ydim/3)+1
 		  dealiase_field(:,j) = cmplx(0.0_rp,0.0_rp,rp)
 	  end do	
+
+    ! set all modes to zero in brucker space which can not be resolved on the real space grid
+    do i =0,xdim-1 
+      do j =0,ydim-1 
+        if((aimag(state%iky_bar%val(i,j)) >= ky_max).OR.(aimag(state%iky_bar%val(i,j)) <=ky_min)) then
+        dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+        end if
+      end do
+    end do
+
+    ! set all modes in brucker space to zero which can  be resolved on the real space grid but not in brucker space
+    do i =0,xdim-1 
+      do j =0,ydim-1 
+        if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &
+            .OR.(aimag(state%iky%val(i,j)) <= minval(aimag(state%iky_bar%val(i,:))))) then
+        dealiase_field(i,j) = cmplx(0.0_rp,0.0_rp)
+        end if
+      end do
+    end do
 end function
 
 

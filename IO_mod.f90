@@ -32,6 +32,8 @@ module IO_mod
 
     call write_u_stat()     ! u-relatetd measures
     call write_E_stat()     ! Energy related measures
+    call write_T_stat()     ! Energy related measures
+    call write_C_stat()     ! Energy related measures
     call write_sys_stat()   ! System wide measures
 
     !if(debuglevel <= 2) write(*,*) '-done with write_all.'
@@ -495,6 +497,8 @@ module IO_mod
 		character(len=1024) 		  					:: filename
 		character(len=50) 		  						:: suffix
 		character(len=23),parameter					:: path ='./output/data/sys_stat/'
+    real(kind = real_outp_precision)    :: y_aperiodicity_measure      ! how periodic is the field in y-dir
+    real(kind = real_outp_precision)    :: x_aperiodicity_measure      ! how periodic is the field in y-dir
 		write(suffix,"(A12)") "sys_stat.dat"
     suffix = trim(adjustl(suffix))
     filename = path //suffix
@@ -503,22 +507,43 @@ module IO_mod
     if(state%step>=1) then
 		  open(unit=20,file=filename,status='unknown',position='append',action='write',iostat=io_error)
       if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_sys_stat!'
+      !divergence physical
       int_dummy_f%val(:,:) = state%ikx%val(:,:)*state%u_f%val(:,:,1) &
                                 +state%iky%val(:,:)*state%u_f%val(:,:,2) 
+      !divergence brucker
       int1_dummy_f%val(:,:) = state%ikx_bar%val(:,:)*state%u_f%val(:,:,1) &
                                +state%iky_bar%val(:,:)*state%u_f%val(:,:,2) 
       call dfftw_execute_dft(ifull2D,int_dummy_f%val,int_dummy%val)
       call transform(int1_dummy_f%val,int1_dummy%val,-1,1,state%t) 
 
+      ! measure how similar the upper and lower end of sim-box are
+      y_aperiodicity_measure = 0.0_rp
+      x_aperiodicity_measure = 0.0_rp
+      do i = 0,xdim-1
+        y_aperiodicity_measure = y_aperiodicity_measure&
+                    + real(abs(state%u%val(i,ydim-1,1)-state%u%val(i,0,1)),real_outp_precision)
+        y_aperiodicity_measure = y_aperiodicity_measure &
+                    + real(abs(state%u%val(i,ydim-1,2)-state%u%val(i,0,2)),real_outp_precision)
+      end do
+      do j = 0,ydim-1
+        x_aperiodicity_measure = x_aperiodicity_measure&
+                    + real(abs(state%u%val(0,j,1)-state%u%val(xdim-1,j,1)),real_outp_precision)
+        x_aperiodicity_measure = x_aperiodicity_measure &
+                    + real(abs(state%u%val(0,j,2)-state%u%val(xdim-1,j,2)),real_outp_precision)
+      end do
+     y_aperiodicity_measure = 1.0_rp/(y_aperiodicity_measure/(measure_u_rms()*real(xdim)))
+     x_aperiodicity_measure = 1.0_rp/(x_aperiodicity_measure/(measure_u_rms()*real(ydim)))
+
 	 	  write(20,*) state%step,                                               & !1
                   state%t,                                                  & !2
-
-                  0.0_rp,&
+                  0.0_rp,                                                   &
                   !maxval(real(int_dummy%val,real_outp_precision)),          & !3 maximum of divergence
                   shear,                                                    & !4 strength of shear
                   dt,                                                       & !5
                   maxval(real(int1_dummy%val,real_outp_precision)),         & !6 max brucker div 
-                  measure_av(state%s_dummy_f%val)                             !7 average vorticity 
+                  measure_av(state%s_dummy_f%val),                          & !7 average vorticity 
+                  y_aperiodicity_measure,         &                           !8 y_aperiodicity
+                  x_aperiodicity_measure                                       !8 x_aperiodicity
 
       close(20)
     end if

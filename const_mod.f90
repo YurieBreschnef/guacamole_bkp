@@ -12,18 +12,18 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 256 
-	integer(kind=ip),parameter		:: ydim	        = 256   
+	integer(kind=ip),parameter		:: xdim	        = 128 
+	integer(kind=ip),parameter		:: ydim	        = 128   
 
 	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
-	integer(kind = ip),parameter	:: maxfiles 	  = 200 ! maximum no of output files per type
-	integer(kind = ip),parameter	:: measure_every= 100 ! measure diagnostics every X steps
+	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
+	integer(kind = ip),parameter	:: measure_every= 1 ! measure diagnostics every X steps
 	integer(kind = ip),parameter	:: debuglevel 	= 1	  		
   ! level 0: no output, level 1: short, level 2: extensive
 	real(kind = rp)   ,parameter 	:: pi 		    	= 3.1415926535897932384626433833_rp
 
-	real(kind = rp) ,parameter 		:: Lx	          = 4.0_rp *pi !50.0_rp
-	real(kind = rp) ,parameter 		:: Ly	          = 4.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Lx	          = 2.0_rp *pi !50.0_rp
+	real(kind = rp) ,parameter 		:: Ly	          = 2.0_rp *pi !50.0_rp
 
 	complex(kind = rp),parameter	:: imag		     	= (0.0_rp,1.0_rp)
 
@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 2.0_rp
+	real(kind = rp),parameter     :: tmax                      = 1.5_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
@@ -50,7 +50,7 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 1.000_rp
+	real(kind = rp)               :: shear    = 1.00_rp
   integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
@@ -73,7 +73,7 @@ module const
   integer(kind = ip)             :: my_y_end
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.010_rp 
+	real(kind = rp),parameter     :: D_visc   = 0.0100_rp 
 	real(kind = rp),parameter			:: D_therm  = 0.010_rp
 	real(kind = rp),parameter			:: D_comp   = 0.001_rp
 

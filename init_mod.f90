@@ -17,7 +17,7 @@ module init
   	dt_2 	        = dt/2.0_rp
   	steps       	= int(tmax/dt,ip)
   	state%step    = 0
-    T_rm          = real(Lx/(shear*Ly),rp) /2.0
+    T_rm          = real(Lx/(shear*Ly),rp)
     threads = omp_get_max_threads ( )     ! find out on how many threads this prog is running
     !threads = 1
     my_thread_id= omp_get_thread_num ( )

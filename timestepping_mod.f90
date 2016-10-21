@@ -126,7 +126,7 @@ subroutine euler_step()
   !state%temp_f%val = state_np1%temp_f%val
   !state%chem_f%val = state_np1%chem_f%val
 
-  !call dealiase_all()
+  call dealiase_all()
 
 	sheartime = sheartime+dt
 	state%t   = state%t+dt

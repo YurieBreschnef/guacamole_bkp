@@ -251,7 +251,9 @@ function fu_Nuk(u_f,t)
   !$omp end do
   !$omp end parallel
 
-
+  !dealiase
+  fu_Nuk(:,:,1) = dealiase_field(fu_Nuk(:,:,1))
+  fu_Nuk(:,:,2) = dealiase_field(fu_Nuk(:,:,2))
   !IF(ANY(IsNaN(real(fu_Nuk))))  then
   !  write(*,*) 'func fu_Nuk(): NAN detected in output array'
   !  stop
