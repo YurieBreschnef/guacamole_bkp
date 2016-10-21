@@ -188,16 +188,17 @@ module init
     !    state%u%val(i,j,2) = sin(real(ymodes) * (real(i)/real(xdim))*2.0_rp*pi)
     !  end do
     !end do
-    !do i=0,xdim-1
-    !  do j=0,ydim-1
-    !    amp = rand()
-    !    state%u%val(i,j,1) = real((amp-0.5_rp),rp)
-    !    amp = rand()
-    !    state%u%val(i,j,2) = real((amp-0.5_rp),rp)
-    !  end do
-    !end do
 
-    state%u%val = state%u%val *0.00001_rp                             
+    do i=0,xdim-1
+      do j=0,ydim-1
+        amp = rand()
+        state%u%val(i,j,1) = real((amp-0.5_rp),rp)
+        amp = rand()
+        state%u%val(i,j,2) = real((amp-0.5_rp),rp)
+      end do
+    end do
+
+    state%u%val = state%u%val *0.10_rp                             
     call dfftw_execute_dft(full2D,state%u%val(:,:,1),state%u_f%val(:,:,1))
     call dfftw_execute_dft(full2D,state%u%val(:,:,2),state%u_f%val(:,:,2))
     state%u_f%val(0,0,:) = cmplx(0.0_rp,0.0_rp)        ! set constant mode to zero 
@@ -335,6 +336,18 @@ module init
        write(*,*) 'sub init_k(): ALL ikx or iky are ZERO. BAD. VERY BAD.'
        stop
      end if
+
+
+    ky_max = maxval(aimag(state%iky%val(0,:)))
+    ky_min = minval(aimag(state%iky%val(0,:)))
+    if((ky_max .NE. aimag(state%iky%val(0,ydim/2))).OR.(ky_min .NE. aimag(state%iky%val(0,ydim/2+1))))then
+      write(*,*) 'ERROR: init_mod  malfunciton in determination of ky_max,ky_min (important for remapping)'
+      write(*,*) 'ky_max:',ky_max,'state%iky%val(0,ydim/2)',state%iky%val(0,ydim/2)
+      write(*,*) 'ky_min:',ky_min,'state%iky%val(0,ydim/2+1)',state%iky%val(0,ydim/2+1)
+      
+      stop
+    end if
+
 
 
     state%ikx_sqr%val = state%ikx%val**2

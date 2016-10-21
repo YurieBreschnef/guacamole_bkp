@@ -31,7 +31,7 @@ module const
 	integer(kind = ip)	    			:: steps 		
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
-	real(kind = rp),parameter     :: tmax                      = 50.0_rp
+	real(kind = rp),parameter     :: tmax                      = 2.0_rp
 	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
@@ -50,10 +50,13 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = .000_rp
-  integer(kind = ip)            :: shearing = 0
+	real(kind = rp)               :: shear    = 1.000_rp
+  integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
+  !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
+	real(kind = rp)					      :: ky_max 
+	real(kind = rp)					      :: ky_min
   
   integer(kind = ip)            :: benchmarking = 0
 
@@ -70,7 +73,7 @@ module const
   integer(kind = ip)             :: my_y_end
 
 
-	real(kind = rp),parameter     :: D_visc   = 0.070_rp 
+	real(kind = rp),parameter     :: D_visc   = 0.010_rp 
 	real(kind = rp),parameter			:: D_therm  = 0.010_rp
 	real(kind = rp),parameter			:: D_comp   = 0.001_rp
 

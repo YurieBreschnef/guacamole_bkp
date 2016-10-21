@@ -26,7 +26,7 @@ function fu(u_f,temp_f,chem_f,t)
   fu = cmplx(0.0_rp,0.0_rp,rp)
   fu = fu + fu_Nuk(u_f,t)                 !Nonlinear part
   fu = fu + fu_diff(u_f,t)                !DIFFUSION
-  fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
+  !fu = fu + fu_buo(u_f,temp_f,chem_f,t)   !BUOYANCY 
   fu = fu + fu_shear(u_f,t)               !SHEAR
 
   fu(0,0,:) = cmplx(0.0_rp,0.0_rp,rp)     ! set constant mode to zero

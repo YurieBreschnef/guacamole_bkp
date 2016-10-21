@@ -223,7 +223,10 @@ module IO_mod
     type(sfield)                        :: x_i_dummy
     type(sfield)                        :: y_r_dummy
     type(sfield)                        :: y_i_dummy
+    type(sfield)                        :: abs_r_dummy
+    type(sfield)                        :: abs_i_dummy
     type(vfield)                        :: dummy
+    type(sfield)                        :: abs_dummy
 		character(len=50) 		  						:: suffix
 		character(len=18),parameter					:: path ='./output/data/u_f/'
 		write(suffix,"(I5,A8)")  int(state%t/write_intervall), ".u_f.dat"
@@ -244,19 +247,29 @@ module IO_mod
     y_r_dummy%val(:,:) = log(abs(real(state%u_f%val(:,:,2),real_outp_precision)))
     y_i_dummy%val(:,:) = log(abs(real(aimag(state%u_f%val(:,:,2)),real_outp_precision)))
 
+    abs_dummy%val(:,:) = sqrt(real(state%u%val(:,:,1),rp)**2 + real(state%u%val(:,:,2),rp)**2)
+    call transform(abs_dummy%val,abs_dummy%val,1,shearing,sheartime)
+    abs_r_dummy%val(:,:) = log(abs(real(abs_dummy%val(:,:),real_outp_precision)))
+    abs_i_dummy%val(:,:) = log(abs(real(aimag(abs_dummy%val(:,:)),real_outp_precision)))
+
     x_r_dummy = rearrange_2Dspectrum(deal_mask(x_r_dummy))
     x_i_dummy = rearrange_2Dspectrum(deal_mask(x_i_dummy))
     y_r_dummy = rearrange_2Dspectrum(deal_mask(y_r_dummy))
     y_i_dummy = rearrange_2Dspectrum(deal_mask(y_i_dummy))
+    abs_r_dummy = rearrange_2Dspectrum(deal_mask(abs_r_dummy))
+    abs_i_dummy = rearrange_2Dspectrum(deal_mask(abs_i_dummy))
+
 
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_f!'
 		  do i=0,xdim-1
 	    	do j=0,ydim-1
-	  			write(20,*) i,j,real(x_r_dummy%val(i,j),real_outp_precision),&    !3: real(u_x)
-                          real(x_i_dummy%val(i,j),real_outp_precision),&    !4: imag(u_x)
-                          real(y_r_dummy%val(i,j),real_outp_precision),&    !5: real(u_y)
-                          real(y_i_dummy%val(i,j),real_outp_precision)      !6: imag(u_y)
+	  			write(20,*) i,j,real(x_r_dummy%val(i,j),real_outp_precision),&      !3: real(u_x)
+                          real(x_i_dummy%val(i,j),real_outp_precision),&      !4: imag(u_x)
+                          real(y_r_dummy%val(i,j),real_outp_precision),&      !5: real(u_y)
+                          real(y_i_dummy%val(i,j),real_outp_precision),&      !6: imag(u_y)
+                          real(abs_r_dummy%val(i,j),real_outp_precision),&    !7: real(abs_u)
+                          real(abs_i_dummy%val(i,j),real_outp_precision)      !8: imag(abs_u)
 			end do
 		end do
     close(20)

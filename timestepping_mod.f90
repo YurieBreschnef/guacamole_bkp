@@ -119,13 +119,14 @@ subroutine euler_step()
 
   call set_ik_bar(sheartime) 
 	state_np1%u_f%val    = state%u_f%val    + dt*fu(state%u_f%val ,state%temp_f%val,state%chem_f%val,sheartime)     
-	state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
-	state_np1%chem_f%val = state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
+	!state_np1%temp_f%val = state%temp_f%val + dt*ft(state%u_f%val ,state%temp_f%val ,sheartime)     
+	!state_np1%chem_f%val = state%chem_f%val + dt*fc(state%u_f%val ,state%chem_f%val ,sheartime)     
 
-  state%u_f%val    = state_np1%u_f%val
-  state%temp_f%val = state_np1%temp_f%val
-  state%chem_f%val = state_np1%chem_f%val
-  call dealiase_all()
+  state%u_f%val     = state_np1%u_f%val
+  !state%temp_f%val = state_np1%temp_f%val
+  !state%chem_f%val = state_np1%chem_f%val
+
+  !call dealiase_all()
 
 	sheartime = sheartime+dt
 	state%t   = state%t+dt

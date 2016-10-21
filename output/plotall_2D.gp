@@ -194,42 +194,51 @@ do for [i=0:no_of_img] {
 		unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
-    set terminal pngcairo size 1200,1200 enhanced font 'Verdana,10'
+    set terminal pngcairo size 900,900 enhanced font 'Verdana,10'
     set output './visual/spec_inspect_combo/'.i.'.png'
   	set multiplot layout 3,3
 
-    #unset tics
+    unset tics
     #unset colorbox
     #unset border 
-  	set title 'temperature field'
-    plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
-  	#set title 'Real part of fourier spectrum of temp field'
-   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image notitle
-  	set title 'Imag part of fourier spectrum of temp field'
-   	plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:4  with image notitle
-  	set title 'real cutof part of fourier spectrum of temp field'
-   	plot './data/temp_f_remap/'.i.'.temp_f_remap.dat' using 1:2:4  with image notitle
+  	#set title 'temperature field'
+    #plot './data/temp/'.i.'.temp.dat' using 1:2:3 with image notitle
+  	##set title 'Real part of fourier spectrum of temp field'
+   	##plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:3  with image notitle
+  	#set title 'Imag part of fourier spectrum of temp field'
+   	#plot './data/temp_f/'.i.'.temp_f.dat' using 1:2:4  with image notitle
+  	#set title 'real cutof part of fourier spectrum of temp field'
+   	#plot './data/temp_f_remap/'.i.'.temp_f_remap.dat' using 1:2:4  with image notitle
 
-  	set title 'chemical field'
-   	plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image notitle
-  	set title 'Real part of fourier spectrum of chem field'
-   	plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
-  	#set title 'Imag part of fourier spectrum of chem field'
-   	#plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:4 with image notitle
-  	set title 'real cutof part of fourier spectrum of chem  field'
-   	plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
+  	#set title 'chemical field'
+   	#plot './data/chem/'.i.'.chem.dat' using 1:2:3 with image notitle
+  	#set title 'Real part of fourier spectrum of chem field'
+   	#plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:3 with image notitle
+  	##set title 'Imag part of fourier spectrum of chem field'
+   	##plot './data/chem_f/'.i.'.chem_f.dat' using 1:2:4 with image notitle
+  	#set title 'real cutof part of fourier spectrum of chem  field'
+   	#plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
+
+  	set title ' u_x '
+   	plot './data/u/'.i.'.u.dat' using 1:2:3 with image notitle
+  	set title 'ln[Re(F(u_x))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
+  	set title 'ln[imag(F(u_x))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
+
+  	set title ' u_y '
+   	plot './data/u/'.i.'.u.dat' using 1:2:4 with image notitle
+  	set title 'ln[Re(F(u_y))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
+  	set title 'ln[imag(F(u_y))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
 
   	set title 'absolute magnitude  of velocity field'
    	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
-  	set title 'Real part of fourier transform of u_x '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
-  	#set title 'Imag part of fourier transform of u_x '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
-  	set title 'Real part of fourier transform of u_y '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
-  	#set title 'Imag part of fourier transform of u_y '
-   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
-
+  	set title 'ln[Re(F(abs(u))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:7 with image notitle
+  	set title 'ln[imag(F(abs(u)))] '
+   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:8 with image notitle
 
   	unset multiplot
     unset size
