@@ -21,10 +21,13 @@ module IO_mod
     call write_temp()
     call write_buo()
 
+
     call write_div()
     call write_vort()
 
     call write_u_f()
+    call write_k_spec()
+
     call write_chem_f()
     call write_chem_f_remap()
     call write_temp_f()
@@ -216,6 +219,60 @@ module IO_mod
     close(20)
   end subroutine
   
+  subroutine write_k_spec()
+    use const
+    ! writes the energy spectrum to file 
+    integer                             :: io_error = 0
+    integer,parameter                   ::  bins = 100
+    real(kind = real_outp_precision)    :: out_x,out_y,out_z
+    real(kind = rp)                     :: k_abs,r_dummy,dk         ! maximum k-norm
+    real(kind = rp),dimension(bins)     :: bin ! maximum k-norm
+    real(kind = rp),dimension(bins)     :: bin_area ! maximum k-norm
+    type(sfield)                        :: kx_dummy,ky_dummy
+		character(len=1024) 		  					:: filename
+		character(len=50) 		  						:: suffix
+		character(len=21),parameter					:: path ='./output/data/k_spec/'
+		write(suffix,"(I5,A9)")  int(state%t/write_intervall), ".spec.dat"
+    suffix = trim(adjustl(suffix))
+    filename = path //suffix
+		filename = adjustl(filename)
+		filename = trim(filename)
+		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
+    if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_k_spec!'
+    bin = 0.0_rp
+    call set_ik_bar(sheartime)
+    ! calculate maximal distance from center (note that outer edges are not properly resolved)
+    k_abs = sqrt(aimag(state%ikx%val(xdim/2,1))**2 + aimag(state%iky%val(1,ydim/2))**2)
+    ! bin-width dk
+    dk = k_abs / real(bins,rp)
+    ! calculate bin weight by area
+    do k = 0,bins-1
+      bin_area(k) = (pi*(real(k+1,rp)**2))-(pi*(real(k,rp)**2))
+    end do
+    r_dummy = 0.0_rp
+		do i=0,xdim-1
+	  	do j=0,ydim-1
+         do k = 0,bins-1
+            ! how far is k-vector from zero mode?
+            r_dummy = real(sqrt(aimag(state%ikx_bar%val(i,j))**2 + aimag(state%iky_bar%val(i,j))**2),rp)
+            if(r_dummy >= (real(k,rp)*dk)) then
+              if(r_dummy <= (real(k+1,rp)*dk)) then
+                  ! sort energy in this mode into proper bin
+                  bin(k)  = bin(k) +(sqrt(real(state%u_f%val(i,j,1))**2 + aimag(state%u_f%val(i,j,1))**2 ))!&
+                                   !+(sqrt(real(state%u_f%val(i,j,2))**2 + aimag(state%u_f%val(i,j,2))**2 ))
+              end if
+            end if
+          end do
+			end do
+		end do
+		do k=0,bins-1
+	  			write(20,*) k,real(k,rp)*dk, real((bin(k)/bin_area(k)),real_outp_precision)
+		end do
+    close(20)
+  end subroutine
+
+
+
   subroutine write_u_f()
     ! writes the absolute amplitude of fourier coefficients at specified loc  to file
     integer                             :: io_error = 0
@@ -260,7 +317,6 @@ module IO_mod
     y_i_dummy = rearrange_2Dspectrum(deal_mask(y_i_dummy))
     abs_r_dummy = rearrange_2Dspectrum(deal_mask(abs_r_dummy))
     abs_i_dummy = rearrange_2Dspectrum(deal_mask(abs_i_dummy))
-
 
 		open(unit=20,file=filename,status='replace',action='write',iostat=io_error) 
     if(io_error .NE. 0) write(*,*) 'ERROR: could not open file in sub write_u_f!'

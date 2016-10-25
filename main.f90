@@ -67,11 +67,9 @@ program guacamole
   	if(mod(state%step,(steps/1000)).EQ.0) then
         write(*,*) (state%step/(steps/1000)) ,'permille|step:',main_stp, &
     '|t:',state%t,'| dt:',dt,'|shearing:',shearing,'|sheartime:',sheartime,'T_rm',T_rm
-                 
     !    call div_tester()
     end if
     ! ----------------------------------------------------------------------------------------
-
 
 
     ! TIMESTEPPING ---------------------------------------------------------------------------

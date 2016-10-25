@@ -12,8 +12,8 @@ module const
 	integer,parameter				      :: fftw_plan_thoroughness = FFTW_MEASURE
 	! possible also FFTW_MEASURE
 
-	integer(kind=ip),parameter		:: xdim	        = 128 
-	integer(kind=ip),parameter		:: ydim	        = 128   
+	integer(kind=ip),parameter		:: xdim	        = 256 
+	integer(kind=ip),parameter		:: ydim	        = 256   
 
 	integer(kind = ip),parameter	:: seed 		    = 1111	! seed for random init
 	integer(kind = ip),parameter	:: maxfiles 	  = 100 ! maximum no of output files per type
@@ -32,7 +32,7 @@ module const
 	integer(kind = ip)	    			:: i,j,k,l,main_stp      !used for all kinds of loops
 
 	real(kind = rp),parameter     :: tmax                      = 10.0_rp
-	real(kind = rp)					      :: dt 	                     = 1.0e-2_rp
+	real(kind = rp)					      :: dt 	                     = 1.0e-3_rp
 
 	real(kind = rp)					      :: dt_max                    = 1.0e-3_rp
 	real(kind = rp)					      :: dt_min                    = 1.0e-6_rp
@@ -50,13 +50,15 @@ module const
 	real(kind = rp)					      :: dt_49          !(4/9) * dt
 	real(kind = rp)					      :: dt_724         !(7/24) * dt
 
-	real(kind = rp)               :: shear    = 1.00_rp
+	real(kind = rp)               :: shear    = 0.50_rp
   integer(kind = ip)            :: shearing = 1
 	real(kind = rp)               :: sheartime= 0.0_rp
 	real(kind = rp)               :: T_rm 
   !TODO. store ky_bar_max in array so it is not recalculated every time and reset on set_ik_bar
 	real(kind = rp)					      :: ky_max 
 	real(kind = rp)					      :: ky_min
+	real(kind = rp)					      :: kx_max 
+	real(kind = rp)					      :: kx_min
   
   integer(kind = ip)            :: benchmarking = 0
 

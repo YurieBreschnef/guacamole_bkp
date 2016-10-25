@@ -69,5 +69,9 @@ cd T_stat/
 yes | rm *.dat
 cd ..
 
+cd k_spec/
+yes | rm *.dat
+cd ..
+
 echo "bash: clean_data..	done"
 

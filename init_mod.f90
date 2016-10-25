@@ -338,9 +338,9 @@ module init
      end if
 
 
-    ky_max = maxval(aimag(state%iky%val(0,:)))
-    ky_min = minval(aimag(state%iky%val(0,:)))
-    if((ky_max .NE. aimag(state%iky%val(0,ydim/2))).OR.(ky_min .NE. aimag(state%iky%val(0,ydim/2+1))))then
+    ky_max = maxval(aimag(state%iky%val(1,:)))
+    ky_min = minval(aimag(state%iky%val(1,:)))
+    if((ky_max .NE. aimag(state%iky%val(1,ydim/2))).OR.(ky_min .NE. aimag(state%iky%val(1,ydim/2+1))))then
       write(*,*) 'ERROR: init_mod  malfunciton in determination of ky_max,ky_min (important for remapping)'
       write(*,*) 'ky_max:',ky_max,'state%iky%val(0,ydim/2)',state%iky%val(0,ydim/2)
       write(*,*) 'ky_min:',ky_min,'state%iky%val(0,ydim/2+1)',state%iky%val(0,ydim/2+1)

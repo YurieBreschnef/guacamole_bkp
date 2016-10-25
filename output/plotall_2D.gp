@@ -3,15 +3,15 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 4.0*3.14159 
-Ly = 4.0*3.14159  
+Lx = 2.0*3.14159 
+Ly = 2.0*3.14159  
 #Lx = 8 
 #Ly = 8  
 
 no_of_img = 299 
 
     ####################STATISTICS###############################
-    set terminal pngcairo size 800,600 enhanced font 'Verdana,10'
+    set terminal pngcairo size 1200,800 enhanced font 'Verdana,10'
 
     #set output './visual/stat/Energies.png'
     #set title 'simulation time [arb] vs. E_kin [arb]'
@@ -40,17 +40,17 @@ no_of_img = 299
     #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem"   
     #########Multiplot###############
     set output './visual/stat/stat_combo.png'
-    set multiplot layout 4,2
+    set multiplot layout 3,2
    #set xrange [0.0:4.0]
 
-        set title 'simulation time vs.Temperature measures [arb]'
-        plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
-             './data/T_stat/T_stat.dat' using 2:4 title "mean temp" , \
-             './data/T_stat/T_stat.dat' using 2:5 title "min temp"   
-        set title 'simulation time vs. Chemical field measures [arb]'
-        plot './data/C_stat/C_stat.dat' using 2:3 title "max Chem"  , \
-             './data/C_stat/C_stat.dat' using 2:4 title "mean Chem" , \
-             './data/C_stat/C_stat.dat' using 2:5 title "min Chem"   
+        #set title 'simulation time vs.Temperature measures [arb]'
+        #plot './data/T_stat/T_stat.dat' using 2:3 title "max temp"  , \
+        #     './data/T_stat/T_stat.dat' using 2:4 title "mean temp" , \
+        #     './data/T_stat/T_stat.dat' using 2:5 title "min temp"   
+        #set title 'simulation time vs. Chemical field measures [arb]'
+        #plot './data/C_stat/C_stat.dat' using 2:3 title "max Chem"  , \
+        #     './data/C_stat/C_stat.dat' using 2:4 title "mean Chem" , \
+        #     './data/C_stat/C_stat.dat' using 2:5 title "min Chem"   
 
 
         set title 'simulation [arb] time vs. velocities (all directions) [arb]'
@@ -72,8 +72,14 @@ no_of_img = 299
 
         set title 'simulation time vs. shearstrength '
         plot './data/sys_stat/sys_stat.dat' using 2:4 title "shear strength [arb]"
-        set title 'simulation time vs. stepwidth dt [arb] '
-        plot './data/sys_stat/sys_stat.dat' using 2:5 title "dt [arb]"
+        set title 'aperiodicity measure in x and y-dir vs. t [arb] '
+        plot './data/sys_stat/sys_stat.dat' using 2:8 title "y_aperiodicity [arb]", \
+             './data/sys_stat/sys_stat.dat' using 2:9 title "x_aperiodicity [arb]"
+
+
+
+        #set title 'simulation time vs. stepwidth dt [arb] '
+        #plot './data/sys_stat/sys_stat.dat' using 2:5 title "dt [arb]"
 
         #set title 'simulation time vs. average vorticity [arb] '
         #plot './data/sys_stat/sys_stat.dat' using 2:7 title "average vort [arb]"
@@ -96,9 +102,9 @@ do for [i=0:no_of_img] {
 #  	set title 'velocity field'
 #      	plot './data/u/'.i.'.u.dat' using 1:2:($3*50):($4*50)  with vectors
 #
-#  	set output './visual/abs_u/'.i.'.png'
-#  	set title 'absolute magnitude  ofvelocity field'
-#      	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
+  	set output './visual/abs_u/'.i.'.png'
+  	set title 'absolute magnitude  ofvelocity field'
+      	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
 #
   unset xrange
   unset yrange
@@ -194,11 +200,11 @@ do for [i=0:no_of_img] {
 		unset multiplot
 
     #MULTIPLOT temp/chem fourier ceck--------------------------------------------------
-    set terminal pngcairo size 900,900 enhanced font 'Verdana,10'
+    set terminal pngcairo size 800,800 enhanced font 'Verdana,10'
     set output './visual/spec_inspect_combo/'.i.'.png'
   	set multiplot layout 3,3
 
-    unset tics
+    #unset tics
     #unset colorbox
     #unset border 
   	#set title 'temperature field'
@@ -235,10 +241,15 @@ do for [i=0:no_of_img] {
 
   	set title 'absolute magnitude  of velocity field'
    	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
-  	set title 'ln[Re(F(abs(u))] '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:7 with image notitle
-  	set title 'ln[imag(F(abs(u)))] '
-   	plot './data/u_f/'.i.'.u_f.dat' using 1:2:8 with image notitle
+    set style histogram
+    #set yrange[0.0:0.08]
+  	set title 'energy vs k [arb]'
+   	plot './data/k_spec/'.i.'.spec.dat' using 2:3
+
+  	#set title 'ln[Re(F(abs(u))] '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:7 with image notitle
+  	#set title 'ln[imag(F(abs(u)))] '
+   	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:8 with image notitle
 
   	unset multiplot
     unset size
