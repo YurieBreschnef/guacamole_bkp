@@ -3,8 +3,10 @@
 load './gnuplot-palettes-master/jet.pal'    
 
 aspect_ratio = 1
-Lx = 2.0*3.14159 
-Ly = 2.0*3.14159  
+Lx = 8.0*3.14159 
+Ly = 8.0*3.14159  
+xdim = 512
+ydim = 512
 #Lx = 8 
 #Ly = 8  
 
@@ -204,6 +206,7 @@ do for [i=0:no_of_img] {
     set output './visual/spec_inspect_combo/'.i.'.png'
   	set multiplot layout 3,3
 
+
     #unset tics
     #unset colorbox
     #unset border 
@@ -225,26 +228,47 @@ do for [i=0:no_of_img] {
   	#set title 'real cutof part of fourier spectrum of chem  field'
    	#plot './data/chem_f_remap/'.i.'.chem_f_remap.dat' using 1:2:4  with image notitle
 
+    unset cbrange
+    set xrange [0.0:Lx]
+    set yrange [0.0:Ly]
   	set title ' u_x '
    	plot './data/u/'.i.'.u.dat' using 1:2:3 with image notitle
+
+    set xrange [0.0:xdim]
+    set yrange [0.0:ydim]
+    set cbrange[-50:-5]
   	set title 'ln[Re(F(u_x))] '
    	plot './data/u_f/'.i.'.u_f.dat' using 1:2:3 with image notitle
   	set title 'ln[imag(F(u_x))] '
    	plot './data/u_f/'.i.'.u_f.dat' using 1:2:4 with image notitle
 
+    unset cbrange
+    set xrange [0.0:Lx]
+    set yrange [0.0:Ly]
   	set title ' u_y '
    	plot './data/u/'.i.'.u.dat' using 1:2:4 with image notitle
+
+    set xrange [0.0:xdim]
+    set yrange [0.0:ydim]
+    set cbrange[-50:-5]
   	set title 'ln[Re(F(u_y))] '
    	plot './data/u_f/'.i.'.u_f.dat' using 1:2:5 with image notitle
   	set title 'ln[imag(F(u_y))] '
    	plot './data/u_f/'.i.'.u_f.dat' using 1:2:6 with image notitle
 
+    unset cbrange
+    set xrange [0.0:Lx]
+    set yrange [0.0:Ly]
   	set title 'absolute magnitude  of velocity field'
    	plot './data/abs_u/'.i.'.abs_u.dat' using 1:2:3 with image notitle
-    set style histogram
-    #set yrange[0.0:0.08]
+    #set yrange[0.0:0.0003]
+
+    unset xrange  
+    unset yrange
+    set xtics
+    set ytics
   	set title 'energy vs k [arb]'
-   	plot './data/k_spec/'.i.'.spec.dat' using 2:3
+   	plot './data/k_spec/'.i.'.spec.dat' using 2:3 with lines notitle
 
   	#set title 'ln[Re(F(abs(u))] '
    	#plot './data/u_f/'.i.'.u_f.dat' using 1:2:7 with image notitle

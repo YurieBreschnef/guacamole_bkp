@@ -24,7 +24,7 @@ function remap_brucker(in_arr)
     if(abs(T_rm/2.0-sheartime)<abs((T_rm/2.0_rp)-(sheartime+dt))) then
     write(*,*) '---sheartime reached---'
 
-    ! set regions to zero before they are carried out of resolvable domain by remeshing 
+    ! set regions to zero before they are carried out of resolvable domain (and aliased) by remeshing 
     do i =0,xdim-1 
       do j =0,ydim-1 
         if(     (aimag(state%iky%val(i,j)) >= maxval(aimag(state%iky_bar%val(i,:)))) &

@@ -104,7 +104,6 @@ subroutine RK4_step()
     call remap_stepwise()
   end if
   call dealiase_all()
-
 	state%step=state%step+1
 end subroutine
 !------------------------------------------------------------------------------------------
